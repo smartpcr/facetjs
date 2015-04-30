@@ -47,7 +47,7 @@ contextNoApprox = {
 }
 
 describe "DruidDataset", ->
-  describe.only "breakupApply", ->
+  describe "processApply", ->
     wikiDataset = context.wiki
 
     it "breaks up correctly in simple case", ->
@@ -138,6 +138,28 @@ describe "DruidDataset", ->
         .apply(Added2, $Added:NUMBER)
         .apply(Volatile, ($Added:NUMBER + $_sd_0:NUMBER.negate()))
         """)
+
+    it "breaks up correctly in case of duplicate apply (same name)", ->
+      ex = $()
+        .def('wiki', '$wiki') # for now
+        .apply('Added', '$wiki.sum($added)')
+        .apply('Added', '$wiki.sum($added)')
+        .apply('Volatile', '$Added - $wiki.sum($deleted)')
+
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      druidDataset = ex.value
+
+      expect(druidDataset.defs.join('\n')).to.equal("""
+        .def('_sd_0', $wiki:DATASET.sum($deleted:NUMBER))
+        """)
+
+      expect(druidDataset.applies.join('\n')).to.equal("""
+        .apply(Added, $wiki:DATASET.sum($added:NUMBER))
+        .apply(Volatile, ($Added:NUMBER + $_sd_0:NUMBER.negate()))
+        """)
+
 
   describe "simplifies / digests", ->
     it "a (timeBoundary) total", ->

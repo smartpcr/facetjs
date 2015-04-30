@@ -216,9 +216,6 @@ module Facet {
       for (var i = 0; i < actions.length; i++) {
         var action = actions[i];
         if (action instanceof DefAction || action instanceof ApplyAction) {
-          if (hasOwnProperty(typeContext.datasetType, action.name)) {
-            throw new Error(`${action.name} has been redefined`)
-          }
           typeContext.datasetType[action.name] = action.expression._fillRefSubstitutions(typeContext, indexer, alterations);
         } else if (action instanceof SortAction || action instanceof FilterAction) {
           action.expression._fillRefSubstitutions(typeContext, indexer, alterations);

@@ -63,6 +63,7 @@ node_modules/.bin/tsc --noImplicitAny --noEmitOnError --declaration --removeComm
   src/dispatcher/basicDispatcher.ts \
   \
   src/helper/simpleLocator.ts \
+  src/helper/verboseRequester.ts \
   src/helper/retryRequester.ts \
   src/helper/concurrentLimitRequester.ts \
   \

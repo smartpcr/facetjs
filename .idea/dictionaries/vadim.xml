@@ -12,6 +12,7 @@
       <w>chai</w>
       <w>dataset</w>
       <w>datasets</w>
+      <w>datasource</w>
       <w>datasources</w>
       <w>datastore</w>
       <w>datatype</w>
@@ -49,6 +50,7 @@
       <w>walltime</w>
       <w>wickham</w>
       <w>wickham's</w>
+      <w>wikipedia</w>
     </words>
   </dictionary>
 </component>

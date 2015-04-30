@@ -653,3 +653,60 @@ describe "simulate Druid", ->
         "queryType": "timeseries"
       }
     ])
+
+  it "works with no attributes in time split dataset", ->
+    # Unit test added thanks for bug found by Venkatesh Kavuluri
+    # https://groups.google.com/forum/#!topic/facetjs/uM9SldjRuhY
+    ex = $()
+      .apply('ByHour',
+        $('diamonds').split($("time").timeBucket('PT1H', 'Etc/UTC'), 'TimeByHour')
+          .sort('$TimeByHour', 'ascending')
+          .apply('Users',
+            $('diamonds').split('$color', 'Color')
+              .apply('Count', $('diamonds').count())
+              .sort('$Count', 'descending')
+              .limit(3)
+          )
+      )
+
+    expect(ex.simulateQueryPlan(context)).to.deep.equal([
+      {
+        "aggregations": [
+          {
+            "name": "_dummy"
+            "type": "count"
+          }
+        ]
+        "dataSource": "diamonds"
+        "granularity": {
+          "period": "PT1H"
+          "timeZone": "Etc/UTC"
+          "type": "period"
+        }
+        "intervals": [
+          "2015-03-12/2015-03-19"
+        ]
+        "queryType": "timeseries"
+      }
+      {
+        "aggregations": [
+          {
+            "name": "Count"
+            "type": "count"
+          }
+        ]
+        "dataSource": "diamonds"
+        "dimension": {
+          "dimension": "color"
+          "outputName": "Color"
+          "type": "default"
+        }
+        "granularity": "all"
+        "intervals": [
+          "2015-03-14/2015-03-14T01"
+        ]
+        "metric": "Count"
+        "queryType": "topN"
+        "threshold": 3
+      }
+    ])

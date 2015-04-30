@@ -75,19 +75,6 @@ describe "reference check", ->
         ex.referenceCheck(context)
       ).to.throw('multiply must have an operand of type NUMBER at position 0')
 
-    it "saw a name redefined within a context", ->
-      ex = $()
-        .apply('num', 5)
-        .apply('subData',
-          $()
-            .apply('x', '$^num * 3')
-            .apply('x', '$^num * 4')
-        )
-
-      expect(->
-        ex.referenceCheck(context)
-      ).to.throw('x has been redefined')
-
 
   describe "resolves", ->
     it "works in a basic case", ->

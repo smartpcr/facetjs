@@ -319,7 +319,66 @@ module Facet {
       throw new Error('could not find available name');
     }
 
-    public breakUpApply(action: ApplyAction): Action[] {
+    public separateAggregates(apply: ApplyAction, newActionAsDef: boolean): Action[] {
+      var actions: Action[] = [];
+      var namesUsed: string[] = [];
+
+      var newExpression = apply.expression.substitute((ex: Expression, index: number) => {
+        if (ex instanceof AggregateExpression) {
+          var existingAction = this.getExistingActionForExpression(ex);
+          if (index === 0) {
+            if (existingAction) {
+              return new RefExpression({
+                op: 'ref',
+                name: existingAction.name,
+                type: existingAction.expression.type
+              });
+            } else {
+              return null;
+            }
+          }
+
+          var name: string;
+          if (existingAction) {
+            name = existingAction.name;
+          } else {
+            name = this.getTempName(namesUsed);
+            namesUsed.push(name);
+            actions.push(
+              newActionAsDef ?
+              new DefAction({
+                action: 'def',
+                name: name,
+                expression: ex
+              }) :
+              new ApplyAction({
+                action: 'apply',
+                name: name,
+                expression: ex
+              })
+            )
+          }
+
+          return new RefExpression({
+            op: 'ref',
+            name: name,
+            type: 'NUMBER'
+          });
+        }
+      });
+
+      if (!(newExpression instanceof RefExpression && newExpression.name === apply.name)) {
+        actions.push(new ApplyAction({
+          action: 'apply',
+          name: apply.name,
+          expression: newExpression
+        }));
+      }
+
+      return actions;
+    }
+
+    public processApply(action: ApplyAction): Action[] {
       return [action];
     }
 
@@ -376,7 +435,7 @@ module Facet {
           );
         } else {
           if (action.name === this.key) return null;
-          var basicActions = this.breakUpApply(action);
+          var basicActions = this.processApply(action);
           for (var i = 0; i < basicActions.length; i++) {
             var basicAction = basicActions[i];
             if (basicAction instanceof ApplyAction) {

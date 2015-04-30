@@ -289,3 +289,24 @@ describe "DruidDataset", ->
         ])
         testComplete()
       ).done()
+
+    it "works with no attributes in time split dataset", ->
+      ex = $()
+        .apply('ByHour',
+          $('diamonds').split($("time").timeBucket('PT1H', 'Etc/UTC'), 'TimeByHour')
+            .sort('$TimeByHour', 'ascending')
+            .limit(3)
+            .apply('Users',
+              $('diamonds').split('$color', 'Color')
+                .apply('Count', $('diamonds').count())
+                .sort('$Count', 'descending')
+                .limit(2)
+          )
+        )
+
+      basicDispatcher(ex).then((result) ->
+        expect(result.toJS()).to.deep.equal([
+
+        ])
+        testComplete()
+      ).done()
