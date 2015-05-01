@@ -8,7 +8,7 @@ if not WallTime.rules
 { mySqlRequesterFactory } = require('facetjs-mysql-requester')
 
 facet = require('../../build/facet')
-{ Expression, Dataset, TimeRange, $ } = facet
+{ Expression, Dataset, TimeRange, $, basicDispatcherFactory } = facet
 
 info = require('../info')
 
@@ -23,20 +23,22 @@ describe "MySQLDataset", ->
   @timeout(10000);
 
   it "works in advanced case", (testComplete) ->
-    context = {
-      wiki: Dataset.fromJS({
-        source: 'mysql'
-        table: 'wiki_day_agg'
-        attributes: {
-          time: { type: 'TIME' }
-          language: { type: 'STRING' }
-          page: { type: 'STRING' }
-          added: { type: 'NUMBER' }
-          count: { type: 'NUMBER' }
-        }
-        requester: mySqlRequester
-      })
-    }
+    basicDispatcher = basicDispatcherFactory({
+      datasets: {
+        wiki: Dataset.fromJS({
+          source: 'mysql'
+          table: 'wiki_day_agg'
+          attributes: {
+            time: {type: 'TIME'}
+            language: {type: 'STRING'}
+            page: {type: 'STRING'}
+            added: {type: 'NUMBER'}
+            count: {type: 'NUMBER'}
+          }
+          requester: mySqlRequester
+        })
+      }
+    })
 
     ex = $()
       .def("wiki", $('wiki').filter($("language").is('en')))
@@ -62,7 +64,7 @@ describe "MySQLDataset", ->
 #          .limit(100)
 #      )
 
-    ex.compute(context).then((result) ->
+    basicDispatcher(ex).then((result) ->
       expect(result.toJS()).to.deep.equal([
         {
           "Count": 334129
@@ -135,13 +137,15 @@ describe "MySQLDataset", ->
     ).done()
 
   it "works with introspection", (testComplete) ->
-    context = {
-      wiki: Dataset.fromJS({
-        source: 'mysql'
-        table: 'wiki_day_agg'
-        requester: mySqlRequester
-      })
-    }
+    basicDispatcher = basicDispatcherFactory({
+      datasets: {
+        wiki: Dataset.fromJS({
+          source: 'mysql'
+          table: 'wiki_day_agg'
+          requester: mySqlRequester
+        })
+      }
+    })
 
     ex = $()
       .def("wiki", $('wiki').filter($("language").is('en')))
@@ -160,7 +164,7 @@ describe "MySQLDataset", ->
           )
       )
 
-    ex.compute(context).then((result) ->
+    basicDispatcher(ex).then((result) ->
       expect(result.toJS()).to.deep.equal([
         {
           "Count": 334129

@@ -179,8 +179,8 @@ describe "resolve", ->
       ex = ex.referenceCheck(context)
 
       expect(ex.every((e) ->
-        return (String(e.remote) is 'druid:diamonds') if e.isOp('ref')
-        return null
+        return null unless e.isOp('ref')
+        return (String(e.remote) is 'druid:true:diamonds')
       )).to.equal(true)
 
     it "resolves two dataset remotes", ->
@@ -201,11 +201,11 @@ describe "resolve", ->
       ex = ex.referenceCheck(context)
 
       expect(ex.actions[0].expression.every((e) ->
-        return (String(e.remote) is 'druid:diamonds') if e.isOp('ref')
-        return null
+        return null unless e.isOp('ref')
+        return (String(e.remote) is 'druid:true:diamonds')
       )).to.equal(true)
 
       expect(ex.actions[1].expression.every((e) ->
-        return (String(e.remote) is 'druid:diamonds2') if e.isOp('ref')
-        return null
+        return null unless e.isOp('ref')
+        return (String(e.remote) is 'druid:true:diamonds2')
       )).to.equal(true)

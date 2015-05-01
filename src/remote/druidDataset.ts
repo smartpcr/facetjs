@@ -1,4 +1,6 @@
 module Facet {
+  var DUMMY_NAME = '!DUMMY';
+
   var timePartToFormat: Lookup<string> = {
     SECOND_OF_MINUTE: "s",
     SECOND_OF_HOUR: "m'*60+'s",
@@ -58,6 +60,12 @@ module Facet {
   export interface AggregationsAndPostAggregations {
     aggregations: Druid.Aggregation[];
     postAggregations: Druid.PostAggregation[];
+  }
+
+  function cleanDatumInPlace(datum: Datum): void {
+    if (hasOwnProperty(datum, DUMMY_NAME)) {
+      delete datum[DUMMY_NAME];
+    }
   }
 
   function correctTimeBoundaryResult(result: Druid.TimeBoundaryResults): boolean {
@@ -148,6 +156,7 @@ module Facet {
           //}
 
           var datum: Datum = d.result;
+          cleanDatumInPlace(datum);
           datum[label] = new TimeRange({ start: rangeStart, end: rangeEnd });
           return datum;
         })
@@ -177,6 +186,7 @@ module Facet {
         return new NativeDataset({
           source: 'native',
           data: data.map((d: Datum) => {
+            cleanDatumInPlace(d);
             var v: any = d[label];
             if (String(v) === "null") {
               v = null;
@@ -188,7 +198,13 @@ module Facet {
           })
         });
       } else {
-        return new NativeDataset({source: 'native', data: data});
+        return new NativeDataset({
+          source: 'native',
+          data: data.map((d: Datum) => {
+            cleanDatumInPlace(d);
+            return d;
+          })
+        });
       }
     };
   }
@@ -201,7 +217,11 @@ module Facet {
     }
     return new NativeDataset({
       source: 'native',
-      data: res.map((r) => r.event)
+      data: res.map((r) => {
+        var datum = r.event;
+        cleanDatumInPlace(datum);
+        return datum;
+      })
     });
   }
 
@@ -342,6 +362,7 @@ module Facet {
 
     public canHandleSort(sortAction: SortAction): boolean {
       if (this.split instanceof TimeBucketExpression) {
+        if (sortAction.direction !== 'ascending') return false;
         var sortExpression = sortAction.expression;
         if (sortExpression instanceof RefExpression) {
           return sortExpression.name === this.key;
@@ -844,66 +865,21 @@ return (start < 0 ?'-':'') + parts.join('.');
       }
     }
 
-    public breakUpApplies(applies: ApplyAction[]): Action[] {
-      var knownExpressions: Lookup<string> = {};
-      var actions: Action[] = [];
-      var nameIndex = 0;
-
-      applies.forEach((apply) => {
-        var newExpression = apply.expression.substitute((ex: Expression, index: number) => {
-          if (ex instanceof AggregateExpression) {
-            var key = ex.toString();
-            if (index === 0) {
-              if (hasOwnProperty(knownExpressions, key)) {
-                return new RefExpression({
-                  op: 'ref',
-                  name: knownExpressions[key]
-                });
-              } else {
-                knownExpressions[key] = apply.name;
-                return null;
-              }
-            }
-
-            var name: string;
-            if (hasOwnProperty(knownExpressions, key)) {
-              name = knownExpressions[key];
-            } else {
-              name = '_sd_' + nameIndex;
-              nameIndex++;
-              actions.push(new DefAction({
-                action: 'def',
-                name: name,
-                expression: ex
-              }));
-              knownExpressions[key] = name;
-            }
-
-            return new RefExpression({
-              op: 'ref',
-              name: name,
-              type: 'NUMBER'
-            });
-          }
-        });
-
-        if (!(newExpression instanceof RefExpression && newExpression.name === apply.name)) {
-          actions.push(new ApplyAction({
-            action: 'apply',
-            name: apply.name,
-            expression: newExpression
-          }));
-        }
-      });
-
-      return actions;
+    public processApply(apply: ApplyAction): Action[] {
+      return this.separateAggregates(apply, true);
     }
 
-    public appliesToDruid(applies: ApplyAction[]): AggregationsAndPostAggregations {
+    public getAggregationsAndPostAggregations(): AggregationsAndPostAggregations {
       var aggregations: Druid.Aggregation[] = [];
       var postAggregations: Druid.PostAggregation[] = [];
 
-      this.breakUpApplies(applies).forEach((action) => {
+      this.defs.forEach((action) => {
+        if (action.expression instanceof AggregateExpression) {
+          aggregations.push(this.actionToAggregation(action));
+        }
+      });
+
+      this.applies.forEach((action) => {
         if (action.expression instanceof AggregateExpression) {
           aggregations.push(this.actionToAggregation(action));
         } else {
@@ -1052,7 +1028,8 @@ return (start < 0 ?'-':'') + parts.join('.');
     }
 
     public getQueryAndPostProcess(): QueryAndPostProcess<Druid.Query> {
-      if (this.applies && this.applies.every(this.isMinMaxTimeApply, this)) {
+      var applies = this.applies;
+      if (applies && applies.length && applies.every(this.isMinMaxTimeApply, this)) {
         return this.getTimeBoundaryQueryAndPostProcess();
       }
 
@@ -1088,7 +1065,7 @@ return (start < 0 ?'-':'') + parts.join('.');
           };
 
         case 'total':
-          var aggregationsAndPostAggregations = this.appliesToDruid(this.applies);
+          var aggregationsAndPostAggregations = this.getAggregationsAndPostAggregations();
           if (aggregationsAndPostAggregations.aggregations.length) {
             druidQuery.aggregations = aggregationsAndPostAggregations.aggregations;
           }
@@ -1102,9 +1079,12 @@ return (start < 0 ?'-':'') + parts.join('.');
           };
 
         case 'split':
-          var aggregationsAndPostAggregations = this.appliesToDruid(this.applies);
+          var aggregationsAndPostAggregations = this.getAggregationsAndPostAggregations();
           if (aggregationsAndPostAggregations.aggregations.length) {
             druidQuery.aggregations = aggregationsAndPostAggregations.aggregations;
+          } else {
+            // Druid hates not having aggregates so add a dummy count
+            druidQuery.aggregations = [{ name: DUMMY_NAME, type: "count" }];
           }
           if (aggregationsAndPostAggregations.postAggregations.length) {
             druidQuery.postAggregations = aggregationsAndPostAggregations.postAggregations;
@@ -1134,7 +1114,7 @@ return (start < 0 ?'-':'') + parts.join('.');
               var metric: string | Druid.TopNMetricSpec;
               if (sortAction) {
                 metric = (<RefExpression>sortAction.expression).name;
-                if (this.sortOrigin === 'label') {
+                if (this.sortOnLabel()) {
                   metric = { type: 'lexicographic' };
                 }
                 if (sortAction.direction === 'ascending') {

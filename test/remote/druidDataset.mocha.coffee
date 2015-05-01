@@ -47,73 +47,119 @@ contextNoApprox = {
 }
 
 describe "DruidDataset", ->
-  describe "breakupApplies", ->
+  describe "processApply", ->
     wikiDataset = context.wiki
 
     it "breaks up correctly in simple case", ->
       ex = $()
+        .def('wiki', '$wiki') # for now
         .apply('Count', '$wiki.count()')
         .apply('Added', '$wiki.sum($added)')
         .apply('Volatile', '$wiki.max($added) - $wiki.min($deleted)')
 
-      expect(wikiDataset.breakUpApplies(ex.actions).join('\n')).to.equal("""
-        .apply(Count, $wiki.count())
-        .apply(Added, $wiki.sum($added))
-        .def('_sd_0', $wiki.max($added))
-        .def('_sd_1', $wiki.min($deleted))
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      druidDataset = ex.value
+
+      expect(druidDataset.defs.join('\n')).to.equal("""
+        .def('_sd_0', $wiki:DATASET.max($added:NUMBER))
+        .def('_sd_1', $wiki:DATASET.min($deleted:NUMBER))
+        """)
+
+      expect(druidDataset.applies.join('\n')).to.equal("""
+        .apply(Count, $wiki:DATASET.count())
+        .apply(Added, $wiki:DATASET.sum($added:NUMBER))
         .apply(Volatile, ($_sd_0:NUMBER + $_sd_1:NUMBER.negate()))
         """)
 
     it "breaks up correctly in case of duplicate name", ->
       ex = $()
+        .def('wiki', '$wiki') # for now
         .apply('Count', '$wiki.count()')
         .apply('Added', '$wiki.sum($added)')
         .apply('Volatile', '$wiki.sum($added) - $wiki.sum($deleted)')
 
-      expect(wikiDataset.breakUpApplies(ex.actions).join('\n')).to.equal("""
-        .apply(Count, $wiki.count())
-        .apply(Added, $wiki.sum($added))
-        .def('_sd_0', $wiki.sum($deleted))
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      druidDataset = ex.value
+
+      expect(druidDataset.defs.join('\n')).to.equal("""
+        .def('_sd_0', $wiki:DATASET.sum($deleted:NUMBER))
+        """)
+
+      expect(druidDataset.applies.join('\n')).to.equal("""
+        .apply(Count, $wiki:DATASET.count())
+        .apply(Added, $wiki:DATASET.sum($added:NUMBER))
         .apply(Volatile, ($Added:NUMBER + $_sd_0:NUMBER.negate()))
         """)
 
     it "breaks up correctly in case of variable reference", ->
       ex = $()
+        .def('wiki', '$wiki') # for now
         .apply('Count', '$wiki.count()')
         .apply('Added', '$wiki.sum($added)')
         .apply('Volatile', '$Added - $wiki.sum($deleted)')
 
-      expect(wikiDataset.breakUpApplies(ex.actions).join('\n')).to.equal("""
-        .apply(Count, $wiki.count())
-        .apply(Added, $wiki.sum($added))
-        .def('_sd_0', $wiki.sum($deleted))
-        .apply(Volatile, ($Added + $_sd_0:NUMBER.negate()))
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      druidDataset = ex.value
+
+      expect(druidDataset.defs.join('\n')).to.equal("""
+        .def('_sd_0', $wiki:DATASET.sum($deleted:NUMBER))
+        """)
+
+      expect(druidDataset.applies.join('\n')).to.equal("""
+        .apply(Count, $wiki:DATASET.count())
+        .apply(Added, $wiki:DATASET.sum($added:NUMBER))
+        .apply(Volatile, ($Added:NUMBER + $_sd_0:NUMBER.negate()))
         """)
 
     it "breaks up correctly in case of duplicate apply", ->
       ex = $()
+        .def('wiki', '$wiki') # for now
         .apply('Added', '$wiki.sum($added)')
         .apply('Added2', '$wiki.sum($added)')
         .apply('Volatile', '$Added - $wiki.sum($deleted)')
 
-      expect(wikiDataset.breakUpApplies(ex.actions).join('\n')).to.equal("""
-        .apply(Added, $wiki.sum($added))
-        .apply(Added2, $Added)
-        .def('_sd_0', $wiki.sum($deleted))
-        .apply(Volatile, ($Added + $_sd_0:NUMBER.negate()))
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      druidDataset = ex.value
+
+      expect(druidDataset.defs.join('\n')).to.equal("""
+        .def('_sd_0', $wiki:DATASET.sum($deleted:NUMBER))
+        """)
+
+      expect(druidDataset.applies.join('\n')).to.equal("""
+        .apply(Added, $wiki:DATASET.sum($added:NUMBER))
+        .apply(Added2, $Added:NUMBER)
+        .apply(Volatile, ($Added:NUMBER + $_sd_0:NUMBER.negate()))
         """)
 
     it "breaks up correctly in case of duplicate apply (same name)", ->
       ex = $()
+        .def('wiki', '$wiki') # for now
         .apply('Added', '$wiki.sum($added)')
         .apply('Added', '$wiki.sum($added)')
         .apply('Volatile', '$Added - $wiki.sum($deleted)')
 
-      expect(wikiDataset.breakUpApplies(ex.actions).join('\n')).to.equal("""
-        .apply(Added, $wiki.sum($added))
-        .def('_sd_0', $wiki.sum($deleted))
-        .apply(Volatile, ($Added + $_sd_0:NUMBER.negate()))
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      druidDataset = ex.value
+
+      expect(druidDataset.defs.join('\n')).to.equal("""
+        .def('_sd_0', $wiki:DATASET.sum($deleted:NUMBER))
         """)
+
+      expect(druidDataset.applies.join('\n')).to.equal("""
+        .apply(Added, $wiki:DATASET.sum($added:NUMBER))
+        .apply(Volatile, ($Added:NUMBER + $_sd_0:NUMBER.negate()))
+        """)
+
 
   describe "simplifies / digests", ->
     it "a (timeBoundary) total", ->

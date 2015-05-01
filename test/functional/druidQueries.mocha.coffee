@@ -8,7 +8,7 @@ if not WallTime.rules
 { druidRequesterFactory } = require('facetjs-druid-requester')
 
 facet = require('../../build/facet')
-{ Expression, Dataset, TimeRange, $ } = facet
+{ Expression, Dataset, TimeRange, $, basicDispatcherFactory } = facet
 
 info = require('../info')
 
@@ -20,26 +20,29 @@ describe "DruidDataset", ->
   @timeout(10000);
 
   describe "defined attributes in datasource", ->
-    context = {
-      wiki: Dataset.fromJS({
-        source: 'druid',
-        dataSource: 'wikipedia_editstream',
-        timeAttribute: 'time',
-        context: null
-        attributes: {
-          time: { type: 'TIME' }
-          language: { type: 'STRING' }
-          page: { type: 'STRING' }
-          added: { type: 'NUMBER' }
-          count: { type: 'NUMBER' }
-        }
-        filter: $('time').in(TimeRange.fromJS({
-          start: new Date("2013-02-26T00:00:00Z")
-          end: new Date("2013-02-27T00:00:00Z")
-        }))
-        requester: druidRequester
-      })
-    }
+    basicDispatcher = basicDispatcherFactory({
+      datasets: {
+        wiki: Dataset.fromJS({
+          source: 'druid',
+          dataSource: 'wikipedia_editstream',
+          timeAttribute: 'time',
+          context: null
+          attributes: {
+            time: { type: 'TIME' }
+            language: { type: 'STRING' }
+            page: { type: 'STRING' }
+            user: { type: 'STRING' }
+            added: { type: 'NUMBER' }
+            count: { type: 'NUMBER' }
+          }
+          filter: $('time').in(TimeRange.fromJS({
+            start: new Date("2013-02-26T00:00:00Z")
+            end: new Date("2013-02-27T00:00:00Z")
+          }))
+          requester: druidRequester
+        })
+      }
+    })
 
     it "works timePart case", (testComplete) ->
       ex = $()
@@ -53,7 +56,7 @@ describe "DruidDataset", ->
 
       # console.log("ex.simulateQueryPlan(context)", JSON.stringify(ex.simulateQueryPlan(context), null, 2));
 
-      ex.compute(context).then((result) ->
+      basicDispatcher(ex).then((result) ->
         expect(result.toJS()).to.deep.equal([
          {
            "HoursOfDay": [
@@ -100,7 +103,7 @@ describe "DruidDataset", ->
             .limit(5)
         )
 
-      ex.compute(context).then((result) ->
+      basicDispatcher(ex).then((result) ->
         expect(result.toJS()).to.deep.equal([
           {
             "Count": 334129
@@ -186,21 +189,140 @@ describe "DruidDataset", ->
         testComplete()
       ).done()
 
+    it "works with no applies in dimensions split dataset", (testComplete) ->
+      ex = $()
+        .apply('ByHour',
+          $('wiki').split("$page", 'Pages')
+            .sort('$Page', 'descending')
+            .limit(2)
+            .apply('Users',
+              $('wiki').split('$user', 'User')
+                .apply('Count', $('wiki').count())
+                .sort('$Count', 'descending')
+                .limit(2)
+          )
+        )
+
+      basicDispatcher(ex).then((result) ->
+        expect(result.toJS()).to.deep.equal([
+          {
+            "Pages": [
+              {
+                "Page": "!Kheis_Local_Municipality"
+                "Users": [
+                  {
+                    "Count": 1
+                    "User": "Addbot"
+                  }
+                ]
+              }
+              {
+                "Page": "!_(disambiguation)"
+                "Users": [
+                  {
+                    "Count": 1
+                    "User": "Addbot"
+                  }
+                ]
+              }
+            ]
+          }
+        ])
+        testComplete()
+      ).done()
+
+    it "works with no applies in time split dataset", (testComplete) ->
+      ex = $()
+        .apply('ByHour',
+          $('wiki').split($("time").timeBucket('PT1H', 'Etc/UTC'), 'TimeByHour')
+            .sort('$TimeByHour', 'ascending')
+            .limit(3)
+            .apply('Users',
+              $('wiki').split('$page', 'Page')
+                .apply('Count', $('wiki').count())
+                .sort('$Count', 'descending')
+                .limit(2)
+          )
+        )
+
+      basicDispatcher(ex).then((result) ->
+        expect(result.toJS()).to.deep.equal([
+          {
+            "ByHour": [
+              {
+                "TimeByHour": {
+                  "end": new Date("2013-02-26T01:00:00.000Z")
+                  "start": new Date("2013-02-26T00:00:00.000Z")
+                  "type": "TIME_RANGE"
+                }
+                "Users": [
+                  {
+                    "Count": 14
+                    "Page": "Marissa_Mayer"
+                  }
+                  {
+                    "Count": 14
+                    "Page": "Santa_Maria"
+                  }
+                ]
+              }
+              {
+                "TimeByHour": {
+                  "end": new Date("2013-02-26T02:00:00.000Z")
+                  "start": new Date("2013-02-26T01:00:00.000Z")
+                  "type": "TIME_RANGE"
+                }
+                "Users": [
+                  {
+                    "Count": 21
+                    "Page": "Avaya"
+                  }
+                  {
+                    "Count": 18
+                    "Page": "Rachel_Carson"
+                  }
+                ]
+              }
+              {
+                "TimeByHour": {
+                  "end": new Date("2013-02-26T03:00:00.000Z")
+                  "start": new Date("2013-02-26T02:00:00.000Z")
+                  "type": "TIME_RANGE"
+                }
+                "Users": [
+                  {
+                    "Count": 18
+                    "Page": "Michael_Haneke"
+                  }
+                  {
+                    "Count": 15
+                    "Page": "Jean-Louis_Trintignant"
+                  }
+                ]
+              }
+            ]
+          }
+        ])
+        testComplete()
+      ).done()
+
 
   describe "introspection", ->
-    context = {
-      wiki: Dataset.fromJS({
-        source: 'druid',
-        dataSource: 'wikipedia_editstream',
-        timeAttribute: 'time',
-        context: null
-        filter: $('time').in(TimeRange.fromJS({
-          start: new Date("2013-02-26T00:00:00Z")
-          end: new Date("2013-02-27T00:00:00Z")
-        }))
-        requester: druidRequester
-      })
-    }
+    basicDispatcher = basicDispatcherFactory({
+      datasets: {
+        wiki: Dataset.fromJS({
+          source: 'druid',
+          dataSource: 'wikipedia_editstream',
+          timeAttribute: 'time',
+          context: null
+          filter: $('time').in(TimeRange.fromJS({
+            start: new Date("2013-02-26T00:00:00Z")
+            end: new Date("2013-02-27T00:00:00Z")
+          }))
+          requester: druidRequester
+        })
+      }
+    })
 
     it "works with introspection", (testComplete) ->
       ex = $()
@@ -220,7 +342,7 @@ describe "DruidDataset", ->
             )
         )
 
-      ex.compute(context).then((result) ->
+      basicDispatcher(ex).then((result) ->
         expect(result.toJS()).to.deep.equal([
           {
             "Count": 334129
