@@ -103,7 +103,7 @@ function deduplicateSort(a: string[]): string[] {
   return newA
 }
 
-function multiMerge<T>(elements: T[], mergeFn: (a: T,b: T) => T): T[] {
+function multiMerge<T>(elements: T[], mergeFn: (a: T, b: T) => T): T[] {
   var newElements: T[] = [];
   for (var i = 0; i < elements.length; i++) {
     var accumulator = elements[i];
