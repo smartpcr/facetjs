@@ -19,7 +19,6 @@ module Facet {
     defs?: DefAction[];
     applies?: ApplyAction[];
     sort?: SortAction;
-    sortOrigin?: string;
     limit?: LimitAction;
     havingFilter?: Expression;
   }

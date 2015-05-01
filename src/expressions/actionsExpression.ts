@@ -1,16 +1,4 @@
 module Facet {
-  export interface QueryPattern {
-    pattern: string;
-    dataSourceName: string;
-    filter: Expression;
-    split?: Expression;
-    label?: string;
-    applies: ApplyAction[];
-    sortOrigin?: string;
-    sort?: SortAction;
-    limit?: LimitAction;
-  }
-
   export class ActionsExpression extends UnaryExpression {
     static fromJS(parameters: ExpressionJS): ActionsExpression {
       var value = UnaryExpression.jsToValue(parameters);

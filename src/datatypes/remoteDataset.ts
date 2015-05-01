@@ -81,7 +81,6 @@ module Facet {
     public defs: DefAction[];
     public applies: ApplyAction[];
     public sort: SortAction;
-    public sortOrigin: string;
     public limit: LimitAction;
     public havingFilter: Expression;
 
@@ -96,7 +95,6 @@ module Facet {
       this.defs = parameters.defs;
       this.applies = parameters.applies;
       this.sort = parameters.sort;
-      this.sortOrigin = parameters.sortOrigin;
       this.limit = parameters.limit;
       this.havingFilter = parameters.havingFilter;
 
@@ -134,7 +132,6 @@ module Facet {
       }
       if (this.sort) {
         value.sort = this.sort;
-        value.sortOrigin = this.sortOrigin;
       }
       if (this.limit) {
         value.limit = this.limit;
@@ -317,6 +314,20 @@ module Facet {
         if (namesTaken.indexOf(name) === -1 && !this.isKnownName(name)) return name;
       }
       throw new Error('could not find available name');
+    }
+
+    public sortOnLabel(): boolean {
+      var sort = this.sort;
+      if (!sort) return false;
+
+      var sortOn = (<RefExpression>sort.expression).name;
+      if (sortOn !== this.key) return false;
+
+      var applies = this.applies;
+      for (var i = 0; i < applies.length; i++) {
+        if (applies[i].name === sortOn) return false;
+      }
+      return true;
     }
 
     public separateAggregates(apply: ApplyAction, newActionAsDef: boolean): Action[] {

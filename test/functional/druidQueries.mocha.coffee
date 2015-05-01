@@ -28,11 +28,12 @@ describe "DruidDataset", ->
           timeAttribute: 'time',
           context: null
           attributes: {
-            time: {type: 'TIME'}
-            language: {type: 'STRING'}
-            page: {type: 'STRING'}
-            added: {type: 'NUMBER'}
-            count: {type: 'NUMBER'}
+            time: { type: 'TIME' }
+            language: { type: 'STRING' }
+            page: { type: 'STRING' }
+            user: { type: 'STRING' }
+            added: { type: 'NUMBER' }
+            count: { type: 'NUMBER' }
           }
           filter: $('time').in(TimeRange.fromJS({
             start: new Date("2013-02-26T00:00:00Z")
@@ -188,6 +189,123 @@ describe "DruidDataset", ->
         testComplete()
       ).done()
 
+    it "works with no applies in dimensions split dataset", (testComplete) ->
+      ex = $()
+        .apply('ByHour',
+          $('wiki').split("$page", 'Pages')
+            .sort('$Page', 'descending')
+            .limit(2)
+            .apply('Users',
+              $('wiki').split('$user', 'User')
+                .apply('Count', $('wiki').count())
+                .sort('$Count', 'descending')
+                .limit(2)
+          )
+        )
+
+      basicDispatcher(ex).then((result) ->
+        expect(result.toJS()).to.deep.equal([
+          {
+            "Pages": [
+              {
+                "Page": "!Kheis_Local_Municipality"
+                "Users": [
+                  {
+                    "Count": 1
+                    "User": "Addbot"
+                  }
+                ]
+              }
+              {
+                "Page": "!_(disambiguation)"
+                "Users": [
+                  {
+                    "Count": 1
+                    "User": "Addbot"
+                  }
+                ]
+              }
+            ]
+          }
+        ])
+        testComplete()
+      ).done()
+
+    it "works with no applies in time split dataset", (testComplete) ->
+      ex = $()
+        .apply('ByHour',
+          $('wiki').split($("time").timeBucket('PT1H', 'Etc/UTC'), 'TimeByHour')
+            .sort('$TimeByHour', 'ascending')
+            .limit(3)
+            .apply('Users',
+              $('wiki').split('$page', 'Page')
+                .apply('Count', $('wiki').count())
+                .sort('$Count', 'descending')
+                .limit(2)
+          )
+        )
+
+      basicDispatcher(ex).then((result) ->
+        expect(result.toJS()).to.deep.equal([
+          {
+            "ByHour": [
+              {
+                "TimeByHour": {
+                  "end": new Date("2013-02-26T01:00:00.000Z")
+                  "start": new Date("2013-02-26T00:00:00.000Z")
+                  "type": "TIME_RANGE"
+                }
+                "Users": [
+                  {
+                    "Count": 14
+                    "Page": "Marissa_Mayer"
+                  }
+                  {
+                    "Count": 14
+                    "Page": "Santa_Maria"
+                  }
+                ]
+              }
+              {
+                "TimeByHour": {
+                  "end": new Date("2013-02-26T02:00:00.000Z")
+                  "start": new Date("2013-02-26T01:00:00.000Z")
+                  "type": "TIME_RANGE"
+                }
+                "Users": [
+                  {
+                    "Count": 21
+                    "Page": "Avaya"
+                  }
+                  {
+                    "Count": 18
+                    "Page": "Rachel_Carson"
+                  }
+                ]
+              }
+              {
+                "TimeByHour": {
+                  "end": new Date("2013-02-26T03:00:00.000Z")
+                  "start": new Date("2013-02-26T02:00:00.000Z")
+                  "type": "TIME_RANGE"
+                }
+                "Users": [
+                  {
+                    "Count": 18
+                    "Page": "Michael_Haneke"
+                  }
+                  {
+                    "Count": 15
+                    "Page": "Jean-Louis_Trintignant"
+                  }
+                ]
+              }
+            ]
+          }
+        ])
+        testComplete()
+      ).done()
+
 
   describe "introspection", ->
     basicDispatcher = basicDispatcherFactory({
@@ -285,81 +403,6 @@ describe "DruidDataset", ->
               }
             ]
             "TotalAdded": 41412583
-          }
-        ])
-        testComplete()
-      ).done()
-
-    it "works with no attributes in time split dataset", (testComplete) ->
-      ex = $()
-        .apply('ByHour',
-          $('wiki').split($("time").timeBucket('PT1H', 'Etc/UTC'), 'TimeByHour')
-            .sort('$TimeByHour', 'ascending')
-            .limit(3)
-            .apply('Users',
-              $('wiki').split('$page', 'Page')
-                .apply('Count', $('wiki').count())
-                .sort('$Count', 'descending')
-                .limit(2)
-          )
-        )
-
-      basicDispatcher(ex).then((result) ->
-        expect(result.toJS()).to.deep.equal([
-          {
-            "ByHour": [
-              {
-                "TimeByHour": {
-                  "end": "[Date: 2013-02-26T01:00:00.000Z]"
-                  "start": "[Date: 2013-02-26T00:00:00.000Z]"
-                  "type": "TIME_RANGE"
-                }
-                "Users": [
-                  {
-                    "Count": 14
-                    "Page": "Marissa_Mayer"
-                  }
-                  {
-                    "Count": 14
-                    "Page": "Santa_Maria"
-                  }
-                ]
-              }
-              {
-                "TimeByHour": {
-                  "end": "[Date: 2013-02-26T02:00:00.000Z]"
-                  "start": "[Date: 2013-02-26T01:00:00.000Z]"
-                  "type": "TIME_RANGE"
-                }
-                "Users": [
-                  {
-                    "Count": 21
-                    "Page": "Avaya"
-                  }
-                  {
-                    "Count": 18
-                    "Page": "Rachel_Carson"
-                  }
-                ]
-              }
-              {
-                "TimeByHour": {
-                  "end": "[Date: 2013-02-26T03:00:00.000Z]"
-                  "start": "[Date: 2013-02-26T02:00:00.000Z]"
-                  "type": "TIME_RANGE"
-                }
-                "Users": [
-                  {
-                    "Count": 18
-                    "Page": "Michael_Haneke"
-                  }
-                  {
-                    "Count": 15
-                    "Page": "Jean-Louis_Trintignant"
-                  }
-                ]
-              }
-            ]
           }
         ])
         testComplete()

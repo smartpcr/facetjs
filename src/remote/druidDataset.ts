@@ -62,7 +62,7 @@ module Facet {
     postAggregations: Druid.PostAggregation[];
   }
 
-  function cleanDatumInplace(datum: Datum): void {
+  function cleanDatumInPlace(datum: Datum): void {
     if (hasOwnProperty(datum, DUMMY_NAME)) {
       delete datum[DUMMY_NAME];
     }
@@ -156,7 +156,7 @@ module Facet {
           //}
 
           var datum: Datum = d.result;
-          cleanDatumInplace(datum);
+          cleanDatumInPlace(datum);
           datum[label] = new TimeRange({ start: rangeStart, end: rangeEnd });
           return datum;
         })
@@ -186,6 +186,7 @@ module Facet {
         return new NativeDataset({
           source: 'native',
           data: data.map((d: Datum) => {
+            cleanDatumInPlace(d);
             var v: any = d[label];
             if (String(v) === "null") {
               v = null;
@@ -197,7 +198,13 @@ module Facet {
           })
         });
       } else {
-        return new NativeDataset({source: 'native', data: data});
+        return new NativeDataset({
+          source: 'native',
+          data: data.map((d: Datum) => {
+            cleanDatumInPlace(d);
+            return d;
+          })
+        });
       }
     };
   }
@@ -210,7 +217,11 @@ module Facet {
     }
     return new NativeDataset({
       source: 'native',
-      data: res.map((r) => r.event)
+      data: res.map((r) => {
+        var datum = r.event;
+        cleanDatumInPlace(datum);
+        return datum;
+      })
     });
   }
 
@@ -351,6 +362,7 @@ module Facet {
 
     public canHandleSort(sortAction: SortAction): boolean {
       if (this.split instanceof TimeBucketExpression) {
+        if (sortAction.direction !== 'ascending') return false;
         var sortExpression = sortAction.expression;
         if (sortExpression instanceof RefExpression) {
           return sortExpression.name === this.key;
@@ -1070,6 +1082,9 @@ return (start < 0 ?'-':'') + parts.join('.');
           var aggregationsAndPostAggregations = this.getAggregationsAndPostAggregations();
           if (aggregationsAndPostAggregations.aggregations.length) {
             druidQuery.aggregations = aggregationsAndPostAggregations.aggregations;
+          } else {
+            // Druid hates not having aggregates so add a dummy count
+            druidQuery.aggregations = [{ name: DUMMY_NAME, type: "count" }];
           }
           if (aggregationsAndPostAggregations.postAggregations.length) {
             druidQuery.postAggregations = aggregationsAndPostAggregations.postAggregations;
@@ -1092,10 +1107,6 @@ return (start < 0 ?'-':'') + parts.join('.');
               if (this.limit) {
                 throw new Error('can not limit within timeseries query');
               }
-              if (!druidQuery.aggregations) {
-                // Druid hates not having aggregates so add a dummy count
-                druidQuery.aggregations = [{ name: DUMMY_NAME, type: "count" }];
-              }
               break;
 
             case 'topN':
@@ -1103,7 +1114,7 @@ return (start < 0 ?'-':'') + parts.join('.');
               var metric: string | Druid.TopNMetricSpec;
               if (sortAction) {
                 metric = (<RefExpression>sortAction.expression).name;
-                if (this.sortOrigin === 'label') {
+                if (this.sortOnLabel()) {
                   metric = { type: 'lexicographic' };
                 }
                 if (sortAction.direction === 'ascending') {
