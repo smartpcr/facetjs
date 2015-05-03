@@ -38,7 +38,12 @@ describe 'AggregateExpression', ->
     })
 
   describe '#distribute()', ->
-    it 'in simple + case', ->
+    it 'works in simple - case', ->
+      ex = $('data').sum('-$x')
+      ex = ex.distribute()
+      expect(ex.toString()).to.equal('$data.sum($x).negate()')
+
+    it 'works in simple + case', ->
       ex = $('data').sum('$x + $y')
       ex = ex.distribute()
       expect(ex.toString()).to.equal('($data.sum($x) + $data.sum($y))')

@@ -9,7 +9,7 @@ facet = require('../../build/facet')
 { Expression, $ } = facet
 
 describe "expression parser", ->
-  it "it should parse the mega definition", ->
+  it "should parse the mega definition", ->
     ex = $()
       .filter('$color = "Red"')
       .filter('$price < 5')
@@ -56,7 +56,7 @@ describe "expression parser", ->
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 
-  it "it should parse a whole expression", ->
+  it "should parse a whole expression", ->
     ex = Expression.parse("""
       $()
         .def(num, 5)
@@ -77,7 +77,7 @@ describe "expression parser", ->
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 
-  it "it should parse a whole complex expression", ->
+  it "should parse a whole complex expression", ->
     ex = Expression.parse("""
       $()
         .def(wiki, $wiki.filter($language = 'en'))
