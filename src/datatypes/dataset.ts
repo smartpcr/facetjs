@@ -13,7 +13,7 @@ module Facet {
     rawAttributes?: Attributes;
     requester?: Requester.FacetRequester<any>;
     mode?: string;
-    derivedAttributes?: ApplyAction[];
+    derivedAttributes?: Lookup<Expression>;
     filter?: Expression;
     split?: Expression;
     defs?: DefAction[];

@@ -7,6 +7,7 @@ module Facet {
     constructor(parameters: ExpressionValue) {
       super(parameters, dummyObject);
       this._ensureOp("negate");
+      this._checkTypeOfOperand('NUMBER');
       this.type = 'NUMBER';
     }
 

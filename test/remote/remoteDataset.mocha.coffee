@@ -49,7 +49,7 @@ describe "RemoteDataset", ->
 
       expect(ex.op).to.equal('literal')
       remoteDataset = ex.value
-      expect(remoteDataset.derivedAttributes).to.have.length(1)
+      expect(remoteDataset.derivedAttributes).to.have.all.keys(['addedTwice']);
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
       expect(remoteDataset.getAttributesJS()).to.deep.equal({

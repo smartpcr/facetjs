@@ -61,7 +61,8 @@ Expressions are defined below in acceding priority order
   Comparison (=, <, >, <=, >=, <>, !=, in)
   Additive (+, -)
   Multiplicative (*), Division (/)
-  identity (+), negation (-)
+  CallChain ( $x.filter(...) )
+  Unary identity (+), negation (-)
 */
 
 Expression = OrExpression
@@ -107,10 +108,19 @@ AdditiveOp = [+-]
 
 
 MultiplicativeExpression
-  = head:CallChainExpression tail:(_ MultiplicativeOp _ CallChainExpression)*
+  = head:UnaryExpression tail:(_ MultiplicativeOp _ UnaryExpression)*
     { return naryExpressionWithAltFactory('multiply', head, tail, '/', 'reciprocate'); }
 
 MultiplicativeOp = [*/]
+
+
+UnaryExpression
+  = op:AdditiveOp _ ex:CallChainExpression
+    {
+      var negEx = ex.negate(); // Always negate (even with +) just to make sure it is possible
+      return op === '-' ? negEx : ex;
+    }
+  / CallChainExpression
 
 
 CallChainExpression

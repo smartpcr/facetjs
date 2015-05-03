@@ -191,8 +191,8 @@ describe "DruidDataset", ->
 
     it "works with no applies in dimensions split dataset", (testComplete) ->
       ex = $()
-        .apply('ByHour',
-          $('wiki').split("$page", 'Pages')
+        .apply('Pages',
+          $('wiki').split("$page", 'Page')
             .sort('$Page', 'descending')
             .limit(2)
             .apply('Users',

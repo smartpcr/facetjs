@@ -8,6 +8,7 @@ module Facet {
     constructor(parameters: ExpressionValue) {
       super(parameters, dummyObject);
       this._ensureOp("reciprocate");
+      this._checkTypeOfOperand('NUMBER');
       this.type = 'NUMBER';
     }
 

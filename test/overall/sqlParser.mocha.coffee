@@ -27,13 +27,15 @@ describe "SQL parser", ->
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 
-  it "should parse a total expression", ->
+  it "should parse a total expression with all sorts of applies", ->
     ex = Expression.parseSQL("""
       SELECT
       SUM(added) AS 'TotalAdded',
       '2014-01-02' AS 'Date',
       SUM(added) / 4 AS TotalAddedOver4,
-      NOT(true) AS 'False'
+      NOT(true) AS 'False',
+      -added AS MinusAdded,
+      +added AS SimplyAdded
       FROM `wiki`
       WHERE `language`="en"    -- This is just some comment
       GROUP BY ''
@@ -45,6 +47,8 @@ describe "SQL parser", ->
       .apply('Date', new Date('2014-01-02T00:00:00.000Z'))
       .apply('TotalAddedOver4', '$data.sum($added) / 4')
       .apply('False', $(true).not())
+      .apply('MinusAdded', $('added').negate())
+      .apply('SimplyAdded', $('added'))
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 

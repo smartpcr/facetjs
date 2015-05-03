@@ -162,6 +162,57 @@ module Facet {
         remote: datasetContext.remote
       };
     }
+
+    public distribute(): Expression {
+      var fn = this.fn;
+      if (fn !== 'sum') return this; // ToDo: support min and max once those expressions are available
+
+      var attribute = this.attribute;
+      var operand = this.operand;
+      if (attribute instanceof LiteralExpression) {
+        var countAgg = new AggregateExpression({
+          op: 'aggregate',
+          fn: 'count',
+          operand: operand
+        });
+
+        if (attribute.value === 1) {
+          return countAgg;
+        } else {
+          return new MultiplyExpression({
+            op: 'multiply',
+            operands: [attribute, countAgg]
+          });
+        }
+
+      } else if (attribute instanceof AddExpression) {
+        return new AddExpression({
+          op: 'add',
+          operands: attribute.operands.map((attributeOperand) => {
+            return new AggregateExpression({
+              op: 'aggregate',
+              fn: fn,
+              operand: operand,
+              attribute: attributeOperand
+            }).distribute()
+          })
+        });
+
+      } else if (attribute instanceof NegateExpression) {
+        return new NegateExpression({
+          op: 'negate',
+          operand: new AggregateExpression({
+            op: 'aggregate',
+            fn: fn,
+            operand: operand,
+            attribute: attribute.operand
+          }).distribute()
+        });
+
+      } else {
+        return this; // Nothing to do.
+      }
+    }
   }
 
   Expression.register(AggregateExpression);

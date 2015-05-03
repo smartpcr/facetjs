@@ -9,7 +9,7 @@ facet = require('../../build/facet')
 { Expression, $ } = facet
 
 describe "expression parser", ->
-  it "it should parse the mega definition", ->
+  it "should parse the mega definition", ->
     ex = $()
       .filter('$color = "Red"')
       .filter('$price < 5')
@@ -23,6 +23,8 @@ describe "expression parser", ->
       .apply('addition2', "$x.add(1)")
       .apply('multiplication1', "$x * 10 / $y")
       .apply('multiplication2', "$x.multiply($y)")
+      .apply('negate', "-$x")
+      .apply('identity', "+$x")
       .apply('agg_count', "$data.count()")
       .apply('agg_sum', "$data.sum($price)")
       .apply('agg_group', "$data.group($carat)")
@@ -43,6 +45,8 @@ describe "expression parser", ->
       .apply('addition2', $("x").add(1))
       .apply('multiplication1', $("x").multiply(10, $("y").reciprocate()))
       .apply('multiplication2', $("x").multiply($('y')))
+      .apply('negate', $("x").negate())
+      .apply('identity', $("x"))
       .apply('agg_count', $("data").count())
       .apply('agg_sum', $("data").sum($('price')))
       .apply('agg_group', $("data").group($('carat')))
@@ -52,7 +56,7 @@ describe "expression parser", ->
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 
-  it "it should parse a whole expression", ->
+  it "should parse a whole expression", ->
     ex = Expression.parse("""
       $()
         .def(num, 5)
@@ -73,7 +77,7 @@ describe "expression parser", ->
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 
-  it "it should parse a whole complex expression", ->
+  it "should parse a whole complex expression", ->
     ex = Expression.parse("""
       $()
         .def(wiki, $wiki.filter($language = 'en'))
@@ -111,3 +115,8 @@ describe "expression parser", ->
       )
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
+
+  it "should complain on identity misuse (on non numbers)", ->
+    expect(->
+      Expression.parse("+'poo'")
+    ).to.throw("Expression parse error negate expression must have an operand of type NUMBER on `+'poo'`")

@@ -75,7 +75,7 @@ module Facet {
     public rawAttributes: Attributes = null;
     public requester: Requester.FacetRequester<any>;
     public mode: string; // raw, total, split (potential aggregate mode)
-    public derivedAttributes: ApplyAction[];
+    public derivedAttributes: Lookup<Expression>;
     public filter: Expression;
     public split: Expression;
     public defs: DefAction[];
@@ -89,7 +89,7 @@ module Facet {
       this.rawAttributes = parameters.rawAttributes;
       this.requester = parameters.requester;
       this.mode = parameters.mode || 'raw';
-      this.derivedAttributes = parameters.derivedAttributes || [];
+      this.derivedAttributes = parameters.derivedAttributes || {};
       this.filter = parameters.filter || Expression.TRUE;
       this.split = parameters.split;
       this.defs = parameters.defs;
@@ -401,38 +401,54 @@ module Facet {
 
       var value = this.valueOf();
       if (action instanceof DefAction) {
-        if (expression.type !== 'DATASET') return null;
+        if (expression.type === 'DATASET') {
+          switch (this.mode) {
+            case 'total':
+              // Expect it to be the dataset definer
+              if (expression instanceof LiteralExpression) {
+                var otherDataset: RemoteDataset = expression.value;
+                value.derivedAttributes = otherDataset.derivedAttributes;
+                value.filter = otherDataset.filter;
+                //value.defs = value.defs.concat(action);
+              } else {
+                return null;
+              }
+              break;
 
-        switch (this.mode) {
-          case 'total':
-            if (expression instanceof LiteralExpression) {
-              var otherDataset: RemoteDataset = expression.value;
-              value.derivedAttributes = otherDataset.derivedAttributes;
-              value.filter = otherDataset.filter;
-              //value.defs = value.defs.concat(action);
-            } else {
-              return null;
-            }
-            break;
+            case 'split':
+              // Expect it to be .def('myData', facet('myData').filter(split = ^label))
+              // i.e. the filter part of the split pattern
+              var defExpression = action.expression;
+              if (defExpression instanceof ActionsExpression &&
+                defExpression.actions.length === 1 &&
+                defExpression.actions[0].action === 'filter' &&
+                defExpression.actions[0].expression.equals(
+                  this.split.is(new RefExpression({ op: 'ref', name: '^' + this.key, type: this.split.type })))
+              ) {
+                //value.defs = value.defs.concat(action);
 
-          case 'split':
-            // Expect it to be .def('myData', facet('myData').filter(split = ^label))
-            var defExpression = action.expression;
-            if (defExpression instanceof ActionsExpression &&
-              defExpression.actions.length === 1 &&
-              defExpression.actions[0].action === 'filter' &&
-              defExpression.actions[0].expression.equals(
-                this.split.is(new RefExpression({ op: 'ref', name: '^' + this.key, type: this.split.type })))
-            ) {
-              //value.defs = value.defs.concat(action);
+              } else {
+                return null;
+              }
+              break;
 
-            } else {
-              return null;
-            }
-            break;
+            default:
+              return null; // can not do things in raw mode
+          }
+        } else {
+          switch (this.mode) {
+            case 'raw':
+              value.derivedAttributes = immutableAdd(
+                value.derivedAttributes, action.name, action.expression
+              );
+              value.attributes = immutableAdd(
+                value.attributes, action.name, new AttributeInfo({ type: action.expression.type })
+              );
+              break;
 
-          default:
-            return null; // can not add filter in total mode
+            default:
+              return null; // not yet supporting defs in total and split mode
+          }
         }
 
       } else if (action instanceof ApplyAction) {
@@ -440,7 +456,9 @@ module Facet {
         if (!this.canHandleApply(action.expression)) return null;
 
         if (this.mode === 'raw') {
-          value.derivedAttributes = value.derivedAttributes.concat(action);
+          value.derivedAttributes = immutableAdd(
+            value.derivedAttributes, action.name, action.expression
+          );
           value.attributes = immutableAdd(
             value.attributes, action.name, new AttributeInfo({ type: action.expression.type })
           );

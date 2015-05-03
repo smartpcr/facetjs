@@ -521,7 +521,7 @@ module Facet {
 
     /**
      * Performs a substitution by recursively applying the given substitutionFn to every sub-expression
-     * if substitutionFn returns an expression than it is replaced; if null is returned no action is taken.
+     * if substitutionFn returns an expression than it is replaced; if null is returned this expression is returned
      *
      * @param substitutionFn The function with which to substitute
      * @param thisArg The this for the substitution function

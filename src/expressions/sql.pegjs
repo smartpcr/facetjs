@@ -181,7 +181,7 @@ Expressions are defined below in acceding priority order
   Comparison (=, <, >, <=, >=, <>, !=, IS, LIKE, BETWEEN, IN, CONTAINS)
   Additive (+, -)
   Multiplicative (*), Division (/)
-  identity (+), negation (-)
+  Unary identity (+), negation (-)
 */
 
 Expression = OrExpression
@@ -234,10 +234,19 @@ AdditiveOp = [+-]
 
 
 MultiplicativeExpression
-  = head:BasicExpression tail:(_ MultiplicativeOp _ BasicExpression)*
+  = head:UnaryExpression tail:(_ MultiplicativeOp _ UnaryExpression)*
     { return naryExpressionWithAltFactory('multiply', head, tail, '/', 'reciprocate'); }
 
 MultiplicativeOp = [*/]
+
+
+UnaryExpression
+  = op:AdditiveOp _ ex:BasicExpression
+    {
+      var negEx = ex.negate(); // Always negate (even with +) just to make sure it is possible
+      return op === '-' ? negEx : ex;
+    }
+  / BasicExpression
 
 
 BasicExpression
