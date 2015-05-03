@@ -40,6 +40,7 @@ describe "simulate Druid", ->
       .apply('TotalPrice', '$diamonds.sum($price)')
       .apply('PriceTimes2', '$diamonds.sum($price) * 2')
       .apply('PriceMinusTax', '$diamonds.sum($price) - $diamonds.sum($tax)')
+      .apply('PriceDiff', '$diamonds.sum($price - $tax)')
       .apply('Crazy', '$diamonds.sum($price) - $diamonds.sum($tax) + 10 - $diamonds.sum($carat)')
       .apply('PriceAndTax', '$diamonds.sum($price) * $diamonds.sum($tax)')
       .apply('PriceGoodCut', $('diamonds').filter($('cut').is('good')).sum('$price'))
@@ -138,6 +139,21 @@ describe "simulate Druid", ->
             ]
             "fn": "-"
             "name": "PriceMinusTax"
+            "type": "arithmetic"
+          }
+          {
+            "fields": [
+              {
+                "fieldName": "TotalPrice"
+                "type": "fieldAccess"
+              }
+              {
+                "fieldName": "_sd_0"
+                "type": "fieldAccess"
+              }
+            ]
+            "fn": "-"
+            "name": "PriceDiff"
             "type": "arithmetic"
           }
           {
@@ -777,5 +793,57 @@ describe "simulate Druid", ->
         "metric": "Count"
         "queryType": "topN"
         "threshold": 3
+      }
+    ])
+
+  it "inlines a defined derived attribute", ->
+    ex = $()
+      .def("diamonds", $('diamonds').def('sale_price', '$price + $tax'))
+      .apply('ByTime',
+        $('diamonds').split($("time").timeBucket('P1D', 'Etc/UTC'), 'Time')
+          .apply('TotalSalePrice', $('diamonds').sum('$sale_price'))
+      )
+
+    expect(ex.simulateQueryPlan(context)).to.deep.equal([
+      {
+        "aggregations": [
+          {
+            "fieldName": "price"
+            "name": "_sd_0"
+            "type": "doubleSum"
+          }
+          {
+            "fieldName": "tax"
+            "name": "_sd_1"
+            "type": "doubleSum"
+          }
+        ]
+        "dataSource": "diamonds"
+        "granularity": {
+          "period": "P1D"
+          "timeZone": "Etc/UTC"
+          "type": "period"
+        }
+        "intervals": [
+          "2015-03-12/2015-03-19"
+        ]
+        "postAggregations": [
+          {
+            "fields": [
+              {
+                "fieldName": "_sd_0"
+                "type": "fieldAccess"
+              }
+              {
+                "fieldName": "_sd_1"
+                "type": "fieldAccess"
+              }
+            ]
+            "fn": "+"
+            "name": "TotalSalePrice"
+            "type": "arithmetic"
+          }
+        ]
+        "queryType": "timeseries"
       }
     ])

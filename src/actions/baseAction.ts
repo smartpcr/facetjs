@@ -165,6 +165,18 @@ module Facet {
       return this.expression ? this.expression._everyHelper(iter, thisArg, indexer, depth, genDiff) : true;
     }
 
+    /**
+     * Performs a substitution by recursively applying the given substitutionFn to the expression
+     * if substitutionFn returns an expression than it is replaced and a new actions is returned;
+     * if null is returned this action will return
+     *
+     * @param substitutionFn The function with which to substitute
+     * @param thisArg The this for the substitution function
+     */
+    public substitute(substitutionFn: SubstitutionFn, thisArg?: any): Action {
+      return this._substituteHelper(substitutionFn, thisArg, { index: 0 }, 0, 0);
+    }
+
     public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Action {
       if (!this.expression) return this;
       var subExpression = this.expression._substituteHelper(substitutionFn, thisArg, indexer, depth, genDiff);
