@@ -1,5 +1,13 @@
 # Change Log
 
+## 0.14.6
+
+* added ability for distributively transforming aggregates: $data.sum($x + $y) => $data.sum($x) + $data.sum($y)
+
+## 0.14.5
+
+* fixed bug where Druid queries fail if not applies are given
+
 ## 0.14.4
 
 * added verboseRequester
