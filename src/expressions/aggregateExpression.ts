@@ -225,6 +225,32 @@ module Facet {
           }).distribute()
         });
 
+      } else if (attribute instanceof MultiplyExpression) {
+        var attributeOperands = attribute.operands;
+        var literalSubExpression: Expression;
+        var restOfOperands: Expression[] = [];
+        for (var i = 0; i < attributeOperands.length; i++) {
+          var attributeOperand = attributeOperands[i];
+          if (!literalSubExpression && attributeOperand.isOp('literal')) {
+            literalSubExpression = attributeOperand;
+          } else {
+            restOfOperands.push(attributeOperand);
+          }
+        }
+        if (!literalSubExpression) return this;
+        return new MultiplyExpression({
+          op: 'multiply',
+          operands: [
+            literalSubExpression,
+            new AggregateExpression({
+              op: 'aggregate',
+              fn: fn,
+              operand: operand,
+              attribute: new MultiplyExpression({ op: 'multiply', operands: restOfOperands }).simplify()
+            })
+          ]
+        });
+
       } else {
         return this; // Nothing to do.
       }
