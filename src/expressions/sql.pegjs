@@ -26,6 +26,7 @@ var reservedWords = {
   MAX: 1, MIN: 1,
   NOT: 1, NULL: 1, NUMBER_BUCKET: 1,
   ON: 1, OR: 1, ORDER: 1,
+  QUANTILE: 1,
   REPLACE: 1,
   SELECT: 1, SET: 1, SHOW: 1, SUM: 1,
   TABLE: 1, TIME_BUCKET: 1, TRUE: 1,
@@ -263,6 +264,8 @@ AggregateExpression
     { return dataRef.count(); }
   / fn:AggregateFn "(" _ ex:Expression _ ")"
     { return dataRef[fn](ex); }
+  / QuantileToken "(" _ ex:Expression _ "," _ value: Number ")"
+    { return dataRef.quantile(ex, value); }
 
 AggregateFn
   = SumToken / AvgToken / MinToken / MaxToken
@@ -354,6 +357,7 @@ SumToken          = "SUM"i           !IdentifierPart { return 'sum'; }
 AvgToken          = "AVG"i           !IdentifierPart { return 'average'; }
 MinToken          = "MIN"i           !IdentifierPart { return 'min'; }
 MaxToken          = "MAX"i           !IdentifierPart { return 'max'; }
+QuantileToken     = "QUANTILE"i      !IdentifierPart { return 'quantile'; }
 
 TimeBucketToken   = "TIME_BUCKET"i   !IdentifierPart
 NumberBucketToken = "NUMBER_BUCKET"i !IdentifierPart

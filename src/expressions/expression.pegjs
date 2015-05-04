@@ -31,6 +31,7 @@ var possibleCalls = {
   'max': 1,
   'min': 1,
   'average': 1,
+  'quantile': 1,
   'uniqueCount': 1,
   'group': 1,
   'label': 1,

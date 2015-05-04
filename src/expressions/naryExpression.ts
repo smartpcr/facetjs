@@ -52,13 +52,62 @@ module Facet {
       return expressionCount;
     }
 
+    protected _getZeroValue(): any {
+      return null;
+    }
+
+    protected _getUnitValue(): any {
+      return null;
+    }
+
+    protected _getSimpleOperands(): Expression[] {
+      var op = this.op;
+      var operands = this.operands;
+      var unitValue = this._getUnitValue();
+      var zeroValue = this._getZeroValue();
+
+      var simpleOperands: Expression[] = [];
+      for (var i = 0; i < operands.length; i++) {
+        var simpleOperand = operands[i].simplify();
+
+        if (simpleOperand instanceof LiteralExpression) {
+          if (unitValue !== null && simpleOperand.value === unitValue) continue;
+          if (zeroValue !== null && simpleOperand.value === zeroValue) return [simpleOperand];
+        }
+
+        if (simpleOperand.isOp(op)) {
+          simpleOperands = simpleOperands.concat((<NaryExpression>simpleOperand).operands);
+        } else {
+          simpleOperands.push(simpleOperand);
+        }
+      }
+
+      return simpleOperands;
+    }
+
     protected _specialSimplify(simpleOperands: Expression[]): Expression {
       return null;
     }
 
+    protected _simpleFromOperands(operands: Expression[]): Expression {
+      if (operands.length === 1) return operands[0];
+
+      if (operands.length === 0) {
+        var unitValue = this._getUnitValue();
+        if (unitValue !== null) {
+          return new LiteralExpression({ op: 'literal', value: unitValue });
+        }
+      }
+
+      var simpleValue = this.valueOf();
+      simpleValue.operands = operands;
+      simpleValue.simple = true;
+      return new (Expression.classMap[this.op])(simpleValue);
+    }
+
     public simplify(): Expression {
       if (this.simple) return this;
-      var simpleOperands: Expression[] = this.operands.map((operand) => operand.simplify());
+      var simpleOperands: Expression[] = this._getSimpleOperands();
 
       var special = this._specialSimplify(simpleOperands);
       if (special) return special;
@@ -72,11 +121,7 @@ module Facet {
 
       if (nonLiteralOperands.length) {
         if (literalOperands.length) nonLiteralOperands.push(literalExpression);
-
-        var simpleValue = this.valueOf();
-        simpleValue.operands = nonLiteralOperands;
-        simpleValue.simple = true;
-        return new (Expression.classMap[this.op])(simpleValue);
+        return this._simpleFromOperands(nonLiteralOperands);
       } else {
         return literalExpression
       }

@@ -33,23 +33,22 @@ module Facet {
       return '(' + operandSQLs.join(' OR ')  + ')';
     }
 
+    protected _getZeroValue(): any {
+      return true;
+    }
+
+    protected _getUnitValue(): any {
+      return false;
+    }
+
     public simplify(): Expression {
       if (this.simple) return this;
 
-      var simplifiedOperands = this.operands.map((operand) => operand.simplify());
-
-      var mergedSimplifiedOperands: Expression[] = [];
-      for (var i = 0; i < simplifiedOperands.length; i++) {
-        if (simplifiedOperands[i].isOp('or')) {
-          mergedSimplifiedOperands = mergedSimplifiedOperands.concat((<OrExpression>simplifiedOperands[i]).operands);
-        } else {
-          mergedSimplifiedOperands.push(simplifiedOperands[i]);
-        }
-      }
+      var simplifiedOperands = this._getSimpleOperands();
 
       var groupedOperands: Lookup<Expression[]> = {};
-      for (var j = 0; j < mergedSimplifiedOperands.length; j++) {
-        var thisOperand = mergedSimplifiedOperands[j];
+      for (var j = 0; j < simplifiedOperands.length; j++) {
+        var thisOperand = simplifiedOperands[j];
         var referenceGroup = thisOperand.getFreeReferences().toString();
 
         if (groupedOperands[referenceGroup]) {
@@ -75,22 +74,7 @@ module Facet {
         }
       }
 
-      finalOperands = finalOperands.filter((operand) => !(operand.isOp('literal') && (<LiteralExpression>operand).value === false));
-
-      if (finalOperands.some((operand) => operand.isOp('literal') && (<LiteralExpression>operand).value === true)) {
-        return Expression.TRUE;
-      }
-
-      if (finalOperands.length === 0) {
-        return Expression.FALSE;
-      } else if (finalOperands.length === 1) {
-        return finalOperands[0];
-      } else {
-        var simpleValue = this.valueOf();
-        simpleValue.operands = finalOperands;
-        simpleValue.simple = true;
-        return new OrExpression(simpleValue);
-      }
+      return this._simpleFromOperands(finalOperands);
     }
   }
 

@@ -41,6 +41,10 @@ module Facet {
       });
       return '(' + withSign.join('') + ')';
     }
+
+    protected _getUnitValue(): any {
+      return 0;
+    }
   }
 
   Expression.register(AddExpression);

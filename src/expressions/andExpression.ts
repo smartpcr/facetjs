@@ -77,24 +77,21 @@ module Facet {
       return '(' + operandSQLs.join(' AND ')  + ')';
     }
 
+    protected _getZeroValue(): any {
+      return false;
+    }
+
+    protected _getUnitValue(): any {
+      return true;
+    }
+
     public simplify(): Expression {
       if (this.simple) return this;
-
-      var simplifiedOperands = this.operands.map((operand) => operand.simplify());
-
-      var mergedSimplifiedOperands: Expression[] = [];
-      for (var i = 0; i < simplifiedOperands.length; i++) {
-        var simplifiedOperand = simplifiedOperands[i];
-        if (simplifiedOperand instanceof AndExpression) {
-          mergedSimplifiedOperands = mergedSimplifiedOperands.concat(simplifiedOperand.operands);
-        } else {
-          mergedSimplifiedOperands.push(simplifiedOperand);
-        }
-      }
+      var simpleOperands = this._getSimpleOperands();
 
       var groupedOperands: Lookup<Expression[]> = {};
-      for (var j = 0; j < mergedSimplifiedOperands.length; j++) {
-        var thisOperand = mergedSimplifiedOperands[j];
+      for (var j = 0; j < simpleOperands.length; j++) {
+        var thisOperand = simpleOperands[j];
         var referenceGroup = thisOperand.getFreeReferences().toString();
 
         if (hasOwnProperty(groupedOperands, referenceGroup)) {
@@ -120,22 +117,7 @@ module Facet {
         }
       }
 
-      finalOperands = finalOperands.filter((operand) => !(operand.isOp('literal') && (<LiteralExpression>operand).value === true));
-
-      if (finalOperands.some((operand) => operand.isOp('literal') && (<LiteralExpression>operand).value === false)) {
-        return Expression.FALSE;
-      }
-
-      if (finalOperands.length === 0) {
-        return Expression.TRUE;
-      } else if (finalOperands.length === 1) {
-        return finalOperands[0];
-      } else {
-        var simpleValue = this.valueOf();
-        simpleValue.operands = finalOperands;
-        simpleValue.simple = true;
-        return new AndExpression(simpleValue);
-      }
+      return this._simpleFromOperands(finalOperands);
     }
 
     public separateViaAnd(refName: string): Separation {

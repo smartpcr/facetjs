@@ -250,7 +250,7 @@ module Facet {
       }
       var ClassFn = Expression.classMap[op];
       if (!ClassFn) {
-        throw new Error("unsupported expression op '" + op + "'");
+        throw new Error(`unsupported expression op '${op}'`);
       }
 
       return ClassFn.fromJS(expressionJS);
@@ -398,7 +398,7 @@ module Facet {
     }
 
     /**
-     * Retreave all free references by name
+     * Retrieve all free references by name
      * returns the alphabetically sorted list of the references
      *
      * @returns {string[]}
@@ -414,7 +414,7 @@ module Facet {
     }
 
     /**
-     * Retreave all free references by index in the query
+     * Retrieve all free references by index in the query
      *
      * @returns {number[]}
      */
@@ -711,12 +711,13 @@ module Facet {
     }
 
     // Aggregators
-    protected _performAggregate(fn: string, attribute: any): Expression {
+    protected _performAggregate(fn: string, attribute: any, value?: number): Expression {
       if (!Expression.isExpression(attribute)) attribute = Expression.fromJSLoose(attribute);
       return this._performUnaryExpression({
         op: 'aggregate',
         fn: fn,
-        attribute: attribute
+        attribute: attribute,
+        value: value
       });
     }
 
@@ -724,6 +725,8 @@ module Facet {
     public sum(attr: any) { return this._performAggregate('sum', attr); }
     public min(attr: any) { return this._performAggregate('min', attr); }
     public max(attr: any) { return this._performAggregate('max', attr); }
+    public average(attr: any) { return this._performAggregate('average', attr); }
+    public quantile(attr: any, value: number) { return this._performAggregate('quantile', attr, value); }
     public group(attr: any) { return this._performAggregate('group', attr); }
 
     // Label
