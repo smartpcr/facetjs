@@ -389,6 +389,24 @@ module Facet {
       return actions;
     }
 
+    public inlineDerivedAttributes(expression: Expression): Expression {
+      var derivedAttributes = this.derivedAttributes;
+      return expression.substitute((ex) => {
+        if (ex instanceof AggregateExpression) {
+          return ex.substitute((refEx) => {
+            if (refEx instanceof RefExpression) {
+              var refName = refEx.name;
+              return hasOwnProperty(derivedAttributes, refName) ? derivedAttributes[refName] : null;
+            } else {
+              return null;
+            }
+          });
+        } else {
+          return null;
+        }
+      })
+    }
+
     public processApply(action: ApplyAction): Action[] {
       return [action];
     }
