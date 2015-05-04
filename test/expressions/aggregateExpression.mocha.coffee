@@ -48,7 +48,17 @@ describe 'AggregateExpression', ->
       ex = ex.distribute()
       expect(ex.toString()).to.equal('($data.sum($x) + $data.sum($y))')
 
+    it 'works in constant * case', ->
+      ex = $('data').sum('$x * 6')
+      ex = ex.distribute()
+      expect(ex.toString()).to.equal('(6 * $data.sum($x))')
+
+    it 'works in constant * case (multiple operands)', ->
+      ex = $('data').sum('$x * 6 * $y')
+      ex = ex.distribute()
+      expect(ex.toString()).to.equal('(6 * $data.sum($x * $y))'
+
     it 'works in complex case', ->
       ex = $('data').sum('$x + $y - $z * 5 + 6')
       ex = ex.distribute()
-      expect(ex.toString()).to.equal('($data.sum($x) + $data.sum($y) + $data.sum(($z * 5)).negate() + (6 * $data.count()))')
+      expect(ex.toString()).to.equal('($data.sum($x) + $data.sum($y) + (5 * $data.sum($z)).negate() + (6 * $data.count()))')

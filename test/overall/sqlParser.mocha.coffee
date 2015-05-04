@@ -35,7 +35,8 @@ describe "SQL parser", ->
       SUM(added) / 4 AS TotalAddedOver4,
       NOT(true) AS 'False',
       -added AS MinusAdded,
-      +added AS SimplyAdded
+      +added AS SimplyAdded,
+      QUANTILE(added, 0.5) AS Median
       FROM `wiki`
       WHERE `language`="en"    -- This is just some comment
       GROUP BY ''
@@ -49,6 +50,7 @@ describe "SQL parser", ->
       .apply('False', $(true).not())
       .apply('MinusAdded', $('added').negate())
       .apply('SimplyAdded', $('added'))
+      .apply('Median', $('data').quantile('$added', 0.5))
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 

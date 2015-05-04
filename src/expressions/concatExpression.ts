@@ -29,23 +29,19 @@ module Facet {
       return 'CONCAT(' + operandSQLs.join(',')  + ')';
     }
 
+    protected _getUnitValue(): any {
+      return '';
+    }
+
     public simplify(): Expression {
       if (this.simple) return this;
-      var simplifiedOperands = this.operands.map((operand) => operand.simplify());
-      var hasLiteralOperandsOnly = simplifiedOperands.every((operand) => operand.isOp('literal'));
-
-      if (hasLiteralOperandsOnly) {
-        return new LiteralExpression({
-          op: 'literal',
-          value: this._getFnHelper(simplifiedOperands.map((operand) => operand.getFn()))(null)
-        });
-      }
+      var simpleOperands = this._getSimpleOperands();
 
       var i = 0;
-      while(i < simplifiedOperands.length - 2) {
-        if (simplifiedOperands[i].isOp('literal') && simplifiedOperands[i + 1].isOp('literal')) {
-          var mergedValue = (<LiteralExpression>simplifiedOperands[i]).value + (<LiteralExpression>simplifiedOperands[i + 1]).value;
-          simplifiedOperands.splice(i, 2, new LiteralExpression({
+      while (i < simpleOperands.length - 1) {
+        if (simpleOperands[i].isOp('literal') && simpleOperands[i + 1].isOp('literal')) {
+          var mergedValue = (<LiteralExpression>simpleOperands[i]).value + (<LiteralExpression>simpleOperands[i + 1]).value;
+          simpleOperands.splice(i, 2, new LiteralExpression({
             op: 'literal',
             value: mergedValue
           }));
@@ -54,10 +50,7 @@ module Facet {
         }
       }
 
-      var simpleValue = this.valueOf();
-      simpleValue.operands = simplifiedOperands;
-      simpleValue.simple = true;
-      return new ConcatExpression(simpleValue);
+      return this._simpleFromOperands(simpleOperands);
     }
   }
   Expression.register(ConcatExpression);

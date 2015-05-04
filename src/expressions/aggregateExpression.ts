@@ -15,30 +15,39 @@ module Facet {
       if (parameters.attribute) {
         value.attribute = Expression.fromJSLoose(parameters.attribute);
       }
+      if (hasOwnProperty(parameters, 'value')) {
+        value.value = parameters.value;
+      }
       return new AggregateExpression(value);
     }
 
     public fn: string;
     public attribute: Expression;
+    public value: number;
 
     constructor(parameters: ExpressionValue) {
       super(parameters, dummyObject);
-      this.fn = parameters.fn;
+      var fn = parameters.fn;
+      this.fn = fn;
       this._ensureOp("aggregate");
       this._checkTypeOfOperand('DATASET');
 
-      if (this.fn === 'count') {
+      if (fn === 'count') {
         if (parameters.attribute) throw new Error(`count aggregate can not have an 'attribute'`);
         this.type = 'NUMBER';
       } else {
-        if (!parameters.attribute) throw new Error(`${this.fn} aggregate must have an 'attribute'`);
+        if (!parameters.attribute) throw new Error(`${fn} aggregate must have an 'attribute'`);
         this.attribute = parameters.attribute;
         var attrType = this.attribute.type;
-        if (this.fn === 'group') {
+        if (fn === 'group') {
           this.type = attrType ? ('SET/' + attrType) : null;
-        } else if (this.fn === 'min' || this.fn === 'max') {
+        } else if (fn === 'min' || fn === 'max') {
           this.type = attrType;
         } else {
+          if (fn === 'quantile') {
+            if (isNaN(parameters.value)) throw new Error("quantile aggregate must have a 'value'");
+            this.value = parameters.value;
+          }
           this.type = 'NUMBER';
         }
       }
@@ -49,6 +58,9 @@ module Facet {
       value.fn = this.fn;
       if (this.attribute) {
         value.attribute = this.attribute;
+      }
+      if (!isNaN(this.value)) {
+        value.value = this.value;
       }
       return value;
     }
@@ -61,6 +73,9 @@ module Facet {
       if (this.attribute) {
         js.attribute = this.attribute.toJS();
       }
+      if (!isNaN(this.value)) {
+        js.value = this.value;
+      }
       return js;
     }
 
@@ -72,7 +87,8 @@ module Facet {
       return super.equals(other) &&
         this.fn === other.fn &&
         Boolean(this.attribute) === Boolean(other.attribute) &&
-        (!this.attribute || this.attribute.equals(other.attribute));
+        (!this.attribute || this.attribute.equals(other.attribute)) &&
+        this.value === other.value;
     }
 
     protected _getFnHelper(operandFn: ComputeFn): ComputeFn {
