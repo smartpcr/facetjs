@@ -44,6 +44,7 @@ describe "simulate Druid", ->
       .apply('Crazy', '$diamonds.sum($price) - $diamonds.sum($tax) + 10 - $diamonds.sum($carat)')
       .apply('PriceAndTax', '$diamonds.sum($price) * $diamonds.sum($tax)')
       .apply('PriceGoodCut', $('diamonds').filter($('cut').is('good')).sum('$price'))
+      .apply('AvgPrice', '$diamonds.average($price)')
       .apply('Cuts',
         $("diamonds").split("$cut", 'Cut')
           .apply('Count', $('diamonds').count())
@@ -204,6 +205,21 @@ describe "simulate Druid", ->
             ]
             "fn": "*"
             "name": "PriceAndTax"
+            "type": "arithmetic"
+          }
+          {
+            "fields": [
+              {
+                "fieldName": "TotalPrice"
+                "type": "fieldAccess"
+              }
+              {
+                "fieldName": "Count"
+                "type": "fieldAccess"
+              }
+            ]
+            "fn": "/"
+            "name": "AvgPrice"
             "type": "arithmetic"
           }
         ]

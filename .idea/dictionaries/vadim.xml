@@ -37,6 +37,7 @@
       <w>postorder</w>
       <w>preorder</w>
       <w>requesters</w>
+      <w>splitable</w>
       <w>stacktrace</w>
       <w>stderr</w>
       <w>stdout</w>

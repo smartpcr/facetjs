@@ -18,6 +18,10 @@ module Facet {
     limit?: number;
   }
 
+  export interface ExpressionTransformation {
+    (ex: Expression): Expression;
+  }
+
 // =====================================================================================
 // =====================================================================================
 
@@ -183,6 +187,16 @@ module Facet {
       if (this.expression === subExpression) return this;
       var value = this.valueOf();
       value.expression = subExpression;
+      return new (Action.classMap[this.action])(value);
+    }
+
+    public applyToExpression(transformation: ExpressionTransformation): Action {
+      var expression = this.expression;
+      if (!expression) return this;
+      var newExpression = transformation(expression);
+      if (newExpression === expression) return this;
+      var value = this.valueOf();
+      value.expression = newExpression;
       return new (Action.classMap[this.action])(value);
     }
   }

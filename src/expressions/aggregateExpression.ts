@@ -179,7 +179,15 @@ module Facet {
       };
     }
 
-    public distribute(): Expression {
+    public decomposeAverage(): Expression {
+      if (this.fn !== 'average') return this;
+
+      var sumValue = this.valueOf();
+      sumValue.fn = 'sum';
+      return new AggregateExpression(sumValue).divide(this.operand.count());
+    }
+
+    public distributeAggregates(): Expression {
       var fn = this.fn;
       if (fn !== 'sum') return this; // ToDo: support min and max once those expressions are available
 
@@ -195,35 +203,17 @@ module Facet {
         if (attribute.value === 1) {
           return countAgg;
         } else {
-          return new MultiplyExpression({
-            op: 'multiply',
-            operands: [attribute, countAgg]
-          });
+          return attribute.multiply(countAgg);
         }
 
       } else if (attribute instanceof AddExpression) {
         return new AddExpression({
           op: 'add',
-          operands: attribute.operands.map((attributeOperand) => {
-            return new AggregateExpression({
-              op: 'aggregate',
-              fn: fn,
-              operand: operand,
-              attribute: attributeOperand
-            }).distribute()
-          })
+          operands: attribute.operands.map((attributeOperand) => operand.sum(attributeOperand).distributeAggregates())
         });
 
       } else if (attribute instanceof NegateExpression) {
-        return new NegateExpression({
-          op: 'negate',
-          operand: new AggregateExpression({
-            op: 'aggregate',
-            fn: fn,
-            operand: operand,
-            attribute: attribute.operand
-          }).distribute()
-        });
+        return operand.sum(attribute.operand).distributeAggregates().negate();
 
       } else if (attribute instanceof MultiplyExpression) {
         var attributeOperands = attribute.operands;
@@ -238,18 +228,9 @@ module Facet {
           }
         }
         if (!literalSubExpression) return this;
-        return new MultiplyExpression({
-          op: 'multiply',
-          operands: [
-            literalSubExpression,
-            new AggregateExpression({
-              op: 'aggregate',
-              fn: fn,
-              operand: operand,
-              attribute: new MultiplyExpression({ op: 'multiply', operands: restOfOperands }).simplify()
-            })
-          ]
-        });
+        return literalSubExpression.multiply(operand.sum(
+          new MultiplyExpression({ op: 'multiply', operands: restOfOperands }).simplify()
+        ));
 
       } else {
         return this; // Nothing to do.

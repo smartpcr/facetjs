@@ -909,6 +909,25 @@ module Facet {
       })
     }
 
+    /**
+     * Decompose instances of $data.average($x) into $data.sum($x) / $data.count()
+     */
+    public decomposeAverage(): Expression {
+      return this.substitute((ex) => {
+        return ex.isOp('aggregate') ? ex.decomposeAverage() : null;
+      })
+    }
+
+    /**
+     * Apply the distributive law wherever possible to aggregates
+     * Turns $data.sum($x - 2 * $y) into $data.sum($x) - 2 * $data.sum($y)
+     */
+    public distributeAggregates(): Expression {
+      return this.substitute((ex) => {
+        return ex.isOp('aggregate') ? ex.distributeAggregates() : null;
+      })
+    }
+
     // ---------------------------------------------------------
     // Evaluation
 
