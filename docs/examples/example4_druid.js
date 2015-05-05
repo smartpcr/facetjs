@@ -15,10 +15,6 @@ var druidRequester = druidRequesterFactory({
 
 // ----------------------------------
 
-druidRequester = facet.helper.verboseRequesterFactory({
-  requester: druidRequester
-});
-
 var context = {
   wiki: Dataset.fromJS({
     source: 'druid',

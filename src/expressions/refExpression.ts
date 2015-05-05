@@ -18,43 +18,87 @@ module Facet {
     'DATASET': 1
   };
 
+  var GENERATIONS_REGEXP = /^\^+/;
+  var TYPE_REGEXP = /:([A-Z\/]+)$/;
+
   export class RefExpression extends Expression {
-    static NAME_REGEXP = /^(\^*)([a-z_]\w*)$/i;
+    static SIMPLE_NAME_REGEXP = /^([a-z_]\w*)$/i;
 
     static fromJS(parameters: ExpressionJS): RefExpression {
-      return new RefExpression(<any>parameters);
+      var value: ExpressionValue;
+      if (hasOwnProperty(parameters, 'generations')) {
+        value = <any>parameters;
+      } else {
+        value = {
+          op: 'ref',
+          generations: 0,
+          name: parameters.name,
+          type: parameters.type
+        }
+      }
+      return new RefExpression(value);
     }
 
-    public generations: string;
+    static parse(str: string): RefExpression {
+      var refValue: ExpressionValue = { op: 'ref' };
+      var match: RegExpMatchArray;
+
+      match = str.match(GENERATIONS_REGEXP);
+      if (match) {
+        var generations = match[0].length;
+        refValue.generations = generations;
+        str = str.substr(generations);
+      } else {
+        refValue.generations = 0;
+      }
+
+      match = str.match(TYPE_REGEXP);
+      if (match) {
+        refValue.type = match[1];
+        str = str.substr(0, str.length - match[0].length);
+      }
+
+      if (str[0] === '{' && str[str.length - 1] === '}') {
+        str = str.substr(1, str.length - 2);
+      }
+
+      refValue.name = str;
+      return new RefExpression(refValue);
+    }
+
+    public generations: number;
     public name: string;
     public remote: string[];
 
     constructor(parameters: ExpressionValue) {
       super(parameters, dummyObject);
       this._ensureOp("ref");
-      var match = parameters.name.match(RefExpression.NAME_REGEXP);
-      if (match) {
-        this.generations = match[1];
-        this.name = match[2];
-      } else {
-        throw new Error("invalid name '" + parameters.name + "'");
-      }
+
+      this.name = parameters.name;
       if (typeof this.name !== 'string' || this.name.length === 0) {
         throw new TypeError("must have a nonempty `name`");
       }
+
+      this.generations = parameters.generations;
+      if (typeof this.generations !== 'number') {
+        throw new TypeError("must have a generations");
+      }
+
       if (parameters.type) {
         if (!hasOwnProperty(possibleTypes, parameters.type)) {
           throw new TypeError("unsupported type '" + parameters.type + "'");
         }
         this.type = parameters.type;
       }
+
       if (parameters.remote) this.remote = parameters.remote;
       this.simple = true;
     }
 
     public valueOf(): ExpressionValue {
       var value = super.valueOf();
-      value.name = this.generations + this.name;
+      value.name = this.name;
+      value.generations = this.generations;
       if (this.type) value.type = this.type;
       if (this.remote) value.remote = this.remote;
       return value;
@@ -62,18 +106,28 @@ module Facet {
 
     public toJS(): ExpressionJS {
       var js = super.toJS();
-      js.name = this.generations + this.name;
+      js.name = this.name;
+      if (this.generations) js.generations = this.generations;
       if (this.type) js.type = this.type;
       return js;
     }
 
     public toString(): string {
-      //var remote = this.remote || [];
-      return '$' + this.generations + this.name + (this.type ? ':' + this.type : ''); // + `#[${remote.join(',')}]`;
+      var str = this.name;
+      if (!RefExpression.SIMPLE_NAME_REGEXP.test(str)) {
+        str = '{' + str + '}';
+      }
+      if (this.generations) {
+        str = repeat('^', this.generations) + str;
+      }
+      if (this.type) {
+        str += ':' + this.type;
+      }
+      return '$' + str;
     }
 
     public getFn(): ComputeFn {
-      if (this.generations.length) throw new Error("can not call getFn on unresolved expression");
+      if (this.generations) throw new Error("can not call getFn on unresolved expression");
       var name = this.name;
       return (d: Datum) => {
         if (hasOwnProperty(d, name)) {
@@ -87,12 +141,12 @@ module Facet {
     }
 
     public getJSExpression(): string {
-      if (this.generations.length) throw new Error("can not call getJSExpression on unresolved expression");
+      if (this.generations) throw new Error("can not call getJSExpression on unresolved expression");
       return 'd.' + this.name;
     }
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
-      if (this.generations.length) throw new Error("can not call getSQL on unresolved expression");
+      if (this.generations) throw new Error("can not call getSQL on unresolved expression");
       return '`' + this.name + '`';
     }
 
@@ -109,11 +163,11 @@ module Facet {
     public _fillRefSubstitutions(typeContext: FullType, indexer: Indexer, alterations: Alterations): FullType {
       var myIndex = indexer.index;
       indexer.index++;
-      var numGenerations = this.generations.length;
+      var generations = this.generations;
 
       // Step the parentContext back; once for each generation
       var myTypeContext = typeContext;
-      while (numGenerations--) {
+      while (generations--) {
         myTypeContext = myTypeContext.parent;
         if (!myTypeContext) throw new Error('went too deep on ' + this.toString());
       }

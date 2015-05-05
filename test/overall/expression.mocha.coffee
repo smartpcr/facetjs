@@ -8,10 +8,9 @@ if not WallTime.rules
   WallTime.init(tzData.rules, tzData.zones)
 
 facet = require('../../build/facet')
-{ Expression, $ } = facet
+{ Expression, $, RefExpression } = facet
 
 # TODO: Make these as test cases too
-# describe 'LiteralExpression with dataset', -> beforeEach -> this.expression = Expression.fromJS({ op: 'literal', value: <Dataset> })
 # describe 'LiteralExpression with time', -> beforeEach -> this.expression = Expression.fromJS({ op: 'literal', value: Time })
 # describe 'LiteralExpression with time range', -> beforeEach -> this.expression = Expression.fromJS({ op: 'literal', value: { start: ..., end: ...} })
 # describe 'InExpression with time', -> beforeEach -> this.expression = Expression.fromJS({ op: 'in', lhs: TIME, rhs: TIME_RANGE })
@@ -31,13 +30,15 @@ describe "Expression", ->
       { op: 'literal', value: { setType: 'STRING', elements: ['BMW', 'Honda', 'Suzuki'] }, type: 'SET' }
       { op: 'literal', value: { setType: 'NUMBER', elements: [0.05, 0.1] }, type: 'SET' }
       { op: 'literal', value: null }
+      { op: 'literal', value: [{}], type: 'DATASET' }
 
       { op: 'ref', name: 'authors' }
       { op: 'ref', name: 'flight_time' }
       { op: 'ref', name: 'timestamp' }
       { op: 'ref', name: '^timestamp' }
       { op: 'ref', name: '^^timestamp' }
-      { op: 'ref', type: 'STRING', name: 'make' }
+      { op: 'ref', name: 'make', type: 'STRING' }
+      { op: 'ref', name: 'a fish will "save" you - lol / (or not)' }
 
       { op: 'is', lhs: { op: 'literal', value: 5 }, rhs: { op: 'literal', value: 5 } }
       { op: 'is', lhs: { op: 'literal', value: 5 }, rhs: { op: 'ref', name: 'flight_time' } }
@@ -127,6 +128,45 @@ describe "Expression", ->
           lhs: { op: 'literal', value: 5 }
         })
       ).to.throw('must have a rhs')
+
+
+  describe "fancy names", ->
+    it "behaves corretly with spaces", ->
+      expect($("I blame your mother").toJS()).to.deep.equal({
+        "op": "ref"
+        "name": "I blame your mother"
+      })
+
+    it "works with fromJSLoose", ->
+      expect(Expression.fromJSLoose("$^^{and do don't call me shirley}").toJS()).to.deep.equal({
+        "op": "ref"
+        "name": "and do don't call me shirley"
+        "generations": 2
+      })
+
+    it "works with ref expression parse", ->
+      expect(RefExpression.parse("{how are you today?}:NUMBER").toJS()).to.deep.equal({
+        "op": "ref"
+        "name": "how are you today?"
+        "type": "NUMBER"
+      })
+
+    it "parses", ->
+      expect(Expression.parse("$^{hello 'james'} + ${how are you today?}:NUMBER").toJS()).to.deep.equal({
+        "op": "add"
+        "operands": [
+          {
+            "generations": 1
+            "name": "hello 'james'"
+            "op": "ref"
+          }
+          {
+            "name": "how are you today?"
+            "op": "ref"
+            "type": "NUMBER"
+          }
+        ]
+      })
 
 
   describe "#getFn", ->

@@ -1,6 +1,7 @@
 {// starts with function(facet)
 var $ = facet.$;
 var Expression = facet.Expression;
+var RefExpression = facet.RefExpression;
 
 var possibleCalls = {
   'is': 1,
@@ -155,11 +156,10 @@ BasicExpression
 
 
 RefExpression
-  = "$" name:RefName ":" type:TypeName
-    { return $(name + ':' + type); }
-  / "$" name:RefName
-    { return $(name); }
-
+  = "$" name:$("^"* SimpleName (":" TypeName)?)
+    { return RefExpression.parse(name); }
+  / "$" name:$("^"* "{" [^}]+ "}" (":" TypeName)?)
+    { return RefExpression.parse(name); }
 
 LiteralExpression
   = value:Number { return Expression.fromJS({ op: "literal", value: value }); }
@@ -215,8 +215,8 @@ CallFn "CallFn"
 Name "Name"
   = $([a-z0-9A-Z_]+)
 
-RefName "RefName"
-  = $("^"* Name)
+SimpleName "Simple Name"
+  = $([a-zA-Z_] [a-z0-9A-Z_]*)
 
 TypeName "TypeName"
   = $([A-Z_/]+)
