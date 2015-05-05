@@ -8,23 +8,34 @@ if not WallTime.rules
 facet = require('../../build/facet')
 { Expression, Dataset, TimeRange, $ } = facet
 
+attributes = {
+  time: { type: 'TIME' }
+  color: { type: 'STRING' }
+  cut: { type: 'STRING' }
+  tags: { type: 'SET/STRING' }
+  carat: { type: 'NUMBER' }
+  height_bucket: { special: 'range', separator: ';', rangeSize: 0.05, digitsAfterDecimal: 2 }
+  price: { type: 'NUMBER', filterable: false, splitable: false }
+  tax: { type: 'NUMBER', filterable: false, splitable: false }
+  unique_views: { special: 'unique', filterable: false, splitable: false }
+}
+
 context = {
-  diamonds: Dataset.fromJS({
+  'diamonds': Dataset.fromJS({
     source: 'druid',
     dataSource: 'diamonds',
     timeAttribute: 'time',
-    context: null
-    attributes: {
-      time: { type: 'TIME' }
-      color: { type: 'STRING' }
-      cut: { type: 'STRING' }
-      tags: { type: 'SET/STRING' }
-      carat: { type: 'NUMBER' }
-      height_bucket: { special: 'range', separator: ';', rangeSize: 0.05, digitsAfterDecimal: 2 }
-      price: { type: 'NUMBER', filterable: false, splitable: false }
-      tax: { type: 'NUMBER', filterable: false, splitable: false }
-      unique_views: { special: 'unique', filterable: false, splitable: false }
-    }
+    attributes
+    filter: $("time").in({
+      start: new Date('2015-03-12T00:00:00')
+      end:   new Date('2015-03-19T00:00:00')
+    })
+  })
+  'diamonds-alt:;<>': Dataset.fromJS({
+    source: 'druid',
+    dataSource: 'diamonds-alt:;<>',
+    timeAttribute: 'time',
+    attributes
     filter: $("time").in({
       start: new Date('2015-03-12T00:00:00')
       end:   new Date('2015-03-19T00:00:00')
@@ -863,3 +874,16 @@ describe "simulate Druid", ->
         "queryType": "timeseries"
       }
     ])
+
+  it "makes a query on a dataset with a fancy name", ->
+    ex = $()
+      .apply('maximumTime', '${diamonds-alt:;<>}.max($time)')
+      .apply('minimumTime', '${diamonds-alt:;<>}.min($time)')
+
+    expect(ex.simulateQueryPlan(context)).to.deep.equal([
+      {
+        "dataSource": "diamonds-alt:;<>"
+        "queryType": "timeBoundary"
+      }
+    ])
+    
