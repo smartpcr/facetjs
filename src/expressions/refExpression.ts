@@ -26,12 +26,12 @@ module Facet {
 
     static fromJS(parameters: ExpressionJS): RefExpression {
       var value: ExpressionValue;
-      if (hasOwnProperty(parameters, 'generations')) {
+      if (hasOwnProperty(parameters, 'nest')) {
         value = <any>parameters;
       } else {
         value = {
           op: 'ref',
-          generations: 0,
+          nest: 0,
           name: parameters.name,
           type: parameters.type
         }
@@ -45,11 +45,11 @@ module Facet {
 
       match = str.match(GENERATIONS_REGEXP);
       if (match) {
-        var generations = match[0].length;
-        refValue.generations = generations;
-        str = str.substr(generations);
+        var nest = match[0].length;
+        refValue.nest = nest;
+        str = str.substr(nest);
       } else {
-        refValue.generations = 0;
+        refValue.nest = 0;
       }
 
       match = str.match(TYPE_REGEXP);
@@ -71,7 +71,7 @@ module Facet {
       return variableName
     }
 
-    public generations: number;
+    public nest: number;
     public name: string;
     public remote: string[];
 
@@ -85,14 +85,14 @@ module Facet {
       }
       this.name = name;
 
-      var generations = parameters.generations;
-      if (typeof generations !== 'number') {
-        throw new TypeError("must have generations");
+      var nest = parameters.nest;
+      if (typeof nest !== 'number') {
+        throw new TypeError("must have nest");
       }
-      if (generations < 0) {
-        throw new Error("generations must be non-negative");
+      if (nest < 0) {
+        throw new Error("nest must be non-negative");
       }
-      this.generations = generations;
+      this.nest = nest;
 
       var myType = parameters.type;
       if (myType) {
@@ -109,7 +109,7 @@ module Facet {
     public valueOf(): ExpressionValue {
       var value = super.valueOf();
       value.name = this.name;
-      value.generations = this.generations;
+      value.nest = this.nest;
       if (this.type) value.type = this.type;
       if (this.remote) value.remote = this.remote;
       return value;
@@ -118,7 +118,7 @@ module Facet {
     public toJS(): ExpressionJS {
       var js = super.toJS();
       js.name = this.name;
-      if (this.generations) js.generations = this.generations;
+      if (this.nest) js.nest = this.nest;
       if (this.type) js.type = this.type;
       return js;
     }
@@ -128,8 +128,8 @@ module Facet {
       if (!RefExpression.SIMPLE_NAME_REGEXP.test(str)) {
         str = '{' + str + '}';
       }
-      if (this.generations) {
-        str = repeat('^', this.generations) + str;
+      if (this.nest) {
+        str = repeat('^', this.nest) + str;
       }
       if (this.type) {
         str += ':' + this.type;
@@ -138,7 +138,7 @@ module Facet {
     }
 
     public getFn(): ComputeFn {
-      if (this.generations) throw new Error("can not call getFn on unresolved expression");
+      if (this.nest) throw new Error("can not call getFn on unresolved expression");
       var name = this.name;
       return (d: Datum) => {
         if (hasOwnProperty(d, name)) {
@@ -152,7 +152,7 @@ module Facet {
     }
 
     public getJSExpression(datumVar: string): string {
-      if (this.generations) throw new Error("can not call getJSExpression on unresolved expression");
+      if (this.nest) throw new Error("can not call getJSExpression on unresolved expression");
       var name = this.name;
       if (datumVar) {
         if (RefExpression.SIMPLE_NAME_REGEXP.test(datumVar)) {
@@ -166,7 +166,7 @@ module Facet {
     }
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
-      if (this.generations) throw new Error("can not call getSQL on unresolved expression");
+      if (this.nest) throw new Error("can not call getSQL on unresolved expression");
       var name = this.name;
       if (name.indexOf('`') !== -1) throw new Error("can not convert to SQL");
       return '`' + name + '`';
@@ -175,7 +175,7 @@ module Facet {
     public equals(other: RefExpression): boolean {
       return super.equals(other) &&
         this.name === other.name &&
-        this.generations === other.generations;
+        this.nest === other.nest;
     }
 
     public isRemote(): boolean {
@@ -185,11 +185,11 @@ module Facet {
     public _fillRefSubstitutions(typeContext: FullType, indexer: Indexer, alterations: Alterations): FullType {
       var myIndex = indexer.index;
       indexer.index++;
-      var generations = this.generations;
+      var nest = this.nest;
 
       // Step the parentContext back; once for each generation
       var myTypeContext = typeContext;
-      while (generations--) {
+      while (nest--) {
         myTypeContext = myTypeContext.parent;
         if (!myTypeContext) throw new Error('went too deep on ' + this.toString());
       }
@@ -218,7 +218,7 @@ module Facet {
         alterations[myIndex] = new RefExpression({
           op: 'ref',
           name: this.name,
-          generations: this.generations + genBack,
+          nest: this.nest + genBack,
           type: myType,
           remote: myRemote
         })
@@ -238,7 +238,7 @@ module Facet {
 
     public incrementNesting(by: number = 1): RefExpression {
       var value = this.valueOf();
-      value.generations = by + value.generations;
+      value.nest = by + value.nest;
       return new RefExpression(value);
     }
   }

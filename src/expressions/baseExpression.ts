@@ -49,7 +49,7 @@ module Facet {
     part?: string;
     position?: number;
     length?: number;
-    generations?: number;
+    nest?: number;
   }
 
   export interface ExpressionJS {
@@ -72,7 +72,7 @@ module Facet {
     part?: string;
     position?: number;
     length?: number;
-    generations?: number;
+    nest?: number;
   }
 
   export interface Separation {
@@ -402,8 +402,8 @@ module Facet {
     public getFreeReferences(): string[] {
       var freeReferences: string[] = [];
       this.forEach((ex: Expression, index: number, depth: number, genDiff: number) => {
-        if (ex instanceof RefExpression && genDiff <= ex.generations) {
-          freeReferences.push(repeat('^', ex.generations - genDiff) + ex.name);
+        if (ex instanceof RefExpression && genDiff <= ex.nest) {
+          freeReferences.push(repeat('^', ex.nest - genDiff) + ex.name);
         }
       });
       return deduplicateSort(freeReferences);
@@ -417,7 +417,7 @@ module Facet {
     public getFreeReferenceIndexes(): number[] {
       var freeReferenceIndexes: number[] = [];
       this.forEach((ex: Expression, index: number, depth: number, genDiff: number) => {
-        if (ex instanceof RefExpression && genDiff <= ex.generations) {
+        if (ex instanceof RefExpression && genDiff <= ex.nest) {
           freeReferenceIndexes.push(index);
         }
       });
@@ -600,7 +600,7 @@ module Facet {
         return new RefExpression({
           op: 'ref',
           name: tempName,
-          generations: 0
+          nest: 0
         })
       });
       return {
@@ -868,7 +868,7 @@ module Facet {
     public resolve(context: Datum, leaveIfNotFound: boolean = false): Expression {
       return this.substitute((ex: Expression, index: number, depth: number, genDiff: number) => {
         if (ex instanceof RefExpression) {
-          var refGen = ex.generations;
+          var refGen = ex.nest;
           if (genDiff === refGen) {
             var foundValue: any = null;
             var valueFound: boolean = false;
@@ -899,7 +899,7 @@ module Facet {
 
     public resolved(): boolean {
       return this.every((ex: Expression) => {
-        return (ex instanceof RefExpression) ? ex.generations === 0 : null; // Search within
+        return (ex instanceof RefExpression) ? ex.nest === 0 : null; // Search within
       })
     }
 

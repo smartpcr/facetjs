@@ -342,7 +342,7 @@ module Facet {
               return new RefExpression({
                 op: 'ref',
                 name: existingAction.name,
-                generations: 0,
+                nest: 0,
                 type: existingAction.expression.type
               });
             } else {
@@ -374,7 +374,7 @@ module Facet {
           return new RefExpression({
             op: 'ref',
             name: name,
-            generations: 0,
+            nest: 0,
             type: 'NUMBER'
           });
         }
@@ -443,7 +443,7 @@ module Facet {
                 defExpression.actions.length === 1 &&
                 defExpression.actions[0].action === 'filter' &&
                 defExpression.actions[0].expression.equals(
-                  this.split.is(new RefExpression({ op: 'ref', name: this.key, generations: 1, type: this.split.type })))
+                  this.split.is(new RefExpression({ op: 'ref', name: this.key, nest: 1, type: this.split.type })))
               ) {
                 //value.defs = value.defs.concat(action);
 
