@@ -195,10 +195,10 @@ module Facet {
       }
 
       // Look for the reference in the parent chain
-      var genBack = 0;
+      var nestDiff = 0;
       while (myTypeContext && !myTypeContext.datasetType[this.name]) {
         myTypeContext = myTypeContext.parent;
-        genBack++;
+        nestDiff++;
       }
       if (!myTypeContext) {
         throw new Error('could not resolve ' + this.toString());
@@ -210,15 +210,15 @@ module Facet {
       var myRemote = myFullType.remote;
 
       if (this.type && this.type !== myType) {
-        throw new TypeError("type mismatch in " + this.toString() + " (has: " + this.type + " needs: " + myType + ")");
+        throw new TypeError(`type mismatch in ${this.toString()} (has: ${this.type} needs: ${myType})`);
       }
 
       // Check if it needs to be replaced
-      if (!this.type || genBack > 0 || String(this.remote) !== String(myRemote)) {
+      if (!this.type || nestDiff > 0 || String(this.remote) !== String(myRemote)) {
         alterations[myIndex] = new RefExpression({
           op: 'ref',
           name: this.name,
-          nest: this.nest + genBack,
+          nest: this.nest + nestDiff,
           type: myType,
           remote: myRemote
         })

@@ -127,19 +127,19 @@ module Facet {
       }
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
-      var pass = iter.call(thisArg, this, indexer.index, depth, genDiff);
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+      var pass = iter.call(thisArg, this, indexer.index, depth, nestDiff);
       if (pass != null) {
         return pass;
       } else {
         indexer.index++;
       }
 
-      return this.operands.every((operand) => operand._everyHelper(iter, thisArg, indexer, depth + 1, genDiff));
+      return this.operands.every((operand) => operand._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff));
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Expression {
-      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, genDiff);
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
         return sub;
@@ -147,7 +147,7 @@ module Facet {
         indexer.index++;
       }
 
-      var subOperands = this.operands.map((operand) => operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, genDiff));
+      var subOperands = this.operands.map((operand) => operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff));
       if (this.operands.every((op, i) => op === subOperands[i])) return this;
 
       var value = this.valueOf();

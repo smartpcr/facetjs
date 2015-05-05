@@ -65,24 +65,24 @@ module Facet {
       return new (Expression.classMap[this.op])(simpleValue);
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
-      var pass = iter.call(thisArg, this, indexer.index, depth, genDiff);
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+      var pass = iter.call(thisArg, this, indexer.index, depth, nestDiff);
       if (pass != null) {
         return pass;
       } else {
         indexer.index++;
       }
 
-      return this.operand._everyHelper(iter, thisArg, indexer, depth + 1, genDiff)
-          && this._specialEvery(iter, thisArg, indexer, depth, genDiff);
+      return this.operand._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff)
+          && this._specialEvery(iter, thisArg, indexer, depth, nestDiff);
     }
 
-    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
+    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
       return true;
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Expression {
-      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, genDiff);
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
         return sub;
@@ -90,7 +90,7 @@ module Facet {
         indexer.index++;
       }
 
-      var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, genDiff);
+      var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff);
       if (this.operand === subOperand) return this;
 
       var value = this.valueOf();

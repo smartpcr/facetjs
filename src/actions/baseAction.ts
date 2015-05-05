@@ -165,8 +165,8 @@ module Facet {
       return this.expression ? this.expression.getFreeReferences() : [];
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
-      return this.expression ? this.expression._everyHelper(iter, thisArg, indexer, depth, genDiff) : true;
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+      return this.expression ? this.expression._everyHelper(iter, thisArg, indexer, depth, nestDiff) : true;
     }
 
     /**
@@ -181,9 +181,9 @@ module Facet {
       return this._substituteHelper(substitutionFn, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Action {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Action {
       if (!this.expression) return this;
-      var subExpression = this.expression._substituteHelper(substitutionFn, thisArg, indexer, depth, genDiff);
+      var subExpression = this.expression._substituteHelper(substitutionFn, thisArg, indexer, depth, nestDiff);
       if (this.expression === subExpression) return this;
       var value = this.valueOf();
       value.expression = subExpression;

@@ -38,8 +38,8 @@ describe "Expression", ->
       { op: 'ref', name: 'authors' }
       { op: 'ref', name: 'flight_time' }
       { op: 'ref', name: 'timestamp' }
-      { op: 'ref', name: '^timestamp' }
-      { op: 'ref', name: '^^timestamp' }
+      { op: 'ref', name: 'timestamp', nest: 1 }
+      { op: 'ref', name: 'timestamp', nest: 2 }
       { op: 'ref', name: 'make', type: 'STRING' }
       { op: 'ref', name: 'a fish will "save" you - lol / (or not)' }
 
@@ -144,7 +144,7 @@ describe "Expression", ->
       expect(Expression.fromJSLoose("$^^{and do don't call me shirley}").toJS()).to.deep.equal({
         "op": "ref"
         "name": "and do don't call me shirley"
-        "generations": 2
+        "nest": 2
       })
 
     it "works with ref expression parse", ->
@@ -159,7 +159,7 @@ describe "Expression", ->
         "op": "add"
         "operands": [
           {
-            "generations": 1
+            "nest": 1
             "name": "hello 'james'"
             "op": "ref"
           }
