@@ -144,8 +144,8 @@ module Facet {
       throw new Error("should never be called directly");
     }
 
-    public getJSExpression(): string {
-      return this._getJSExpressionHelper(this.lhs.getJSExpression(), this.rhs.getJSExpression())
+    public getJSExpression(datumVar: string): string {
+      return this._getJSExpressionHelper(this.lhs.getJSExpression(datumVar), this.rhs.getJSExpression(datumVar))
     }
 
     protected _getSQLHelper(lhsSQL: string, rhsSQL: string, dialect: SQLDialect, minimal: boolean): string {

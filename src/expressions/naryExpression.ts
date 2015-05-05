@@ -168,8 +168,8 @@ module Facet {
       throw new Error("should never be called directly");
     }
 
-    public getJSExpression(): string {
-      return this._getJSExpressionHelper(this.operands.map((operand) => operand.getJSExpression()));
+    public getJSExpression(datumVar: string): string {
+      return this._getJSExpressionHelper(this.operands.map((operand) => operand.getJSExpression(datumVar)));
     }
 
     protected _getSQLHelper(operandSQLs: string[], dialect: SQLDialect, minimal: boolean): string {

@@ -89,7 +89,7 @@ module Facet {
       };
     }
 
-    public getJSExpression(): string {
+    public getJSExpression(datumVar: string): string {
       throw new Error("can not call getJSExpression on actions");
     }
 

@@ -431,14 +431,11 @@ module Facet {
      * @returns {any}
      */
     public incrementNesting(by: number = 1): Expression {
-      var add = repeat('^', by);
       var freeReferenceIndexes = this.getFreeReferenceIndexes();
       if (freeReferenceIndexes.length === 0) return this;
       return this.substitute((ex: Expression, index: number) => {
         if (ex instanceof RefExpression && freeReferenceIndexes.indexOf(index) !== -1) {
-          var value = ex.valueOf();
-          value.name = add + value.name;
-          return new RefExpression(value);
+          return ex.incrementNesting(by);
         }
         return null;
       });
@@ -543,12 +540,12 @@ module Facet {
       throw new Error('should never be called directly');
     }
 
-    public getJSExpression(): string {
+    public getJSExpression(datumVar: string): string {
       throw new Error('should never be called directly');
     }
 
     public getJSFn(): string {
-      return `function(d){return ${this.getJSExpression()};}`;
+      return `function(d){return ${this.getJSExpression('d')};}`;
     }
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
@@ -602,7 +599,8 @@ module Facet {
 
         return new RefExpression({
           op: 'ref',
-          name: tempName
+          name: tempName,
+          generations: 0
         })
       });
       return {
@@ -742,7 +740,7 @@ module Facet {
       }
       var incrementedSelf = this.incrementNesting(1);
       return this.group(attribute).label(name)
-        .def(newDataName || dataName, incrementedSelf.filter(attribute.is($('^' + name))));
+        .def(newDataName || dataName, incrementedSelf.filter(attribute.is($(name).incrementNesting(1))));
     }
 
     // Expression constructors (Binary)

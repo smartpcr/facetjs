@@ -77,7 +77,7 @@ module Facet {
       }
     }
 
-    public getJSExpression(): string {
+    public getJSExpression(datumVar: string): string {
       return JSON.stringify(this.value); // ToDo: what to do with higher objects?
     }
 
