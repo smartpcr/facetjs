@@ -6,22 +6,38 @@ facet = require('../../build/facet')
 describe "NativeDataset", ->
   carDataset = NativeDataset.fromJS({
     data: [
-      { time: new Date('2015-01-04T12:32:43'), make: 'Honda', model: 'Civic', price: 10000 }
-      { time: new Date('2015-01-04T14:00:40'), make: 'Toyota', model: 'Prius', price: 20000 }
+      {
+        time: new Date('2015-01-04T12:32:43')
+        make: 'Honda'
+        model: 'Civic'
+        price: 10000
+      }
+      {
+        time: new Date('2015-01-04T14:00:40')
+        make: 'Toyota'
+        model: 'Prius'
+        price: 20000
+      }
     ]
   })
 
   carAndPartsDataset = NativeDataset.fromJS({
     data: [
       {
-        time: new Date('2015-01-04T12:32:43'), make: 'Honda', model: 'Civic', price: 10000
+        time: new Date('2015-01-04T12:32:43')
+        make: 'Honda'
+        model: 'Civic'
+        price: 10000
         parts: [
           { part: 'Engine', weight: 500 }
           { part: 'Door', weight: 20 }
         ]
       }
       {
-        time: new Date('2015-01-04T14:00:40'), make: 'Toyota', model: 'Prius', price: 20000
+        time: new Date('2015-01-04T14:00:40')
+        make: 'Toyota'
+        model: 'Prius'
+        price: 20000
         parts: [
           { part: 'Engine', weight: 400 }
           { part: 'Door', weight: 25 }
