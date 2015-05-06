@@ -886,4 +886,3 @@ describe "simulate Druid", ->
         "queryType": "timeBoundary"
       }
     ])
-    
