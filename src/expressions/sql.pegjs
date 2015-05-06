@@ -130,7 +130,7 @@ SQLSubQuery
     { return handleQuery(columns, null, where, groupBy, having, orderBy, limit); }
 
 Columns
-  = __ head:Column tail:(_ "," _ Column)*
+  = _ head:Column tail:(_ "," _ Column)*
     { return [head].concat(tail.map(function(t) { return t[3] })); }
 
 Column
@@ -144,33 +144,39 @@ Column
     }
 
 As
-  = __ AsToken __ name:(String / Ref) { return name; }
+  = _ AsToken _ name:(String / Ref) { return name; }
 
 FromClause
-  = __ FromToken __ table:RefExpression
+  = _ FromToken _ table:RefExpression
     { return table; }
 
 WhereClause
-  = __ WhereToken __ filter:Expression
+  = _ WhereToken _ filter:Expression
     { return filter; }
 
 GroupByClause
-  = __ GroupToken __ ByToken __ groupBy:Expression
-    { return groupBy; }
+  = _ GroupToken __ ByToken _ groupBy:Expression tail:(_ "," _ Expression)*
+    {
+      if (tail.length) error('facetjs does not currently support multi-dimensional GROUP BYs');
+      return groupBy;
+    }
 
 HavingClause
-  = __ HavingToken __ having:Expression
+  = _ HavingToken _ having:Expression
     { return new FilterAction({ action: 'filter', expression: having }); }
 
 OrderByClause
-  = __ OrderToken __ ByToken __ orderBy:Expression direction:Direction?
-    { return new SortAction({ action: 'sort', expression: orderBy, direction: direction || 'ascending' }); }
+  = _ OrderToken __ ByToken _ orderBy:Expression direction:Direction? tail:(_ "," _ Expression Direction?)*
+    {
+      if (tail.length) error('facetjs does not currently support multi-column ORDER BYs');
+      return new SortAction({ action: 'sort', expression: orderBy, direction: direction || 'ascending' });
+    }
 
 Direction
-  = __ dir:(AscToken / DescToken) { return dir; }
+  = _ dir:(AscToken / DescToken) { return dir; }
 
 LimitClause
-  = __ LimitToken __ limit:Number
+  = _ LimitToken _ limit:Number
     { return new LimitAction({ action: 'limit', limit: limit }); }
 
 /*
@@ -272,10 +278,10 @@ AggregateFn
 
 
 FunctionCallExpression
-  = TimeBucketToken "(" _ operand:Expression _ "," _ duration:NameOrString _ "," _ timezone:NameOrString ")"
-    { return operand.timeBucket(duration, timezone); }
-  / NumberBucketToken "(" _ operand:Expression _ "," _ size:Number _ "," _ offset:Number ")"
+  = NumberBucketToken "(" _ operand:Expression _ "," _ size:Number _ "," _ offset:Number ")"
     { return operand.numberBucket(size, offset); }
+  / TimeBucketToken "(" _ operand:Expression _ "," _ duration:NameOrString _ "," _ timezone:NameOrString ")"
+    { return operand.timeBucket(duration, timezone); }
   / TimePartToken "(" _ operand:Expression _ "," _ part:NameOrString _ "," _ timezone:NameOrString ")"
       { return operand.timePart(part, timezone); }
   / SubstrToken "(" _ operand:Expression _ "," _ position:Number _ "," _ length:Number ")"
@@ -363,6 +369,7 @@ TimeBucketToken   = "TIME_BUCKET"i   !IdentifierPart
 NumberBucketToken = "NUMBER_BUCKET"i !IdentifierPart
 TimePartToken     = "TIME_PART"i     !IdentifierPart
 SubstrToken       = "SUBSTR"i        !IdentifierPart
+ConcatToken       = "CONCAT"i        !IdentifierPart
 
 IdentifierPart = [A-Za-z_]
 

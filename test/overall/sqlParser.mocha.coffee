@@ -11,8 +11,18 @@ facet = require('../../build/facet')
 describe "SQL parser", ->
   it "should fail on a expression with no columns", ->
     expect(->
-      Expression.parseSQL("SELECT  FROM diamonds")
-    ).to.throw('SQL parse error Can not have empty column list on `SELECT  FROM diamonds`')
+      Expression.parseSQL("SELECT FROM wiki")
+    ).to.throw('SQL parse error Can not have empty column list on `SELECT FROM wiki`')
+
+  it "should fail gracefully on expressions with multi-dimensional GROUP BYs", ->
+    expect(->
+      Expression.parseSQL("SELECT page, user FROM wiki GROUP BY page, user")
+    ).to.throw('facetjs does not currently support multi-dimensional GROUP BYs')
+
+  it "should fail gracefully on expressions with multi-column sort", ->
+    expect(->
+      Expression.parseSQL("SELECT page, COUNT() AS 'Count' FROM wiki GROUP BY page ORDER BY page DESC, `Count` ASC")
+    ).to.throw('facetjs does not currently support multi-column ORDER BYs')
 
   it "should parse a simple expression", ->
     ex = Expression.parseSQL("""
@@ -172,6 +182,17 @@ describe "SQL parser", ->
 
     ex2 = $('wiki').split('$page', 'Page', 'data')
       .apply('TotalAdded', '$data.sum($added)')
+      .limit(5)
+
+    expect(ex.toJS()).to.deep.equal(ex2.toJS())
+
+  it "should work with few spaces", ->
+    ex = Expression.parseSQL("""
+      SELECT`page`AS'Page'FROM`wiki`GROUP BY`page`ORDER BY`Page`LIMIT 5
+      """)
+
+    ex2 = $('wiki').split('$page', 'Page', 'data')
+      .sort('$Page', 'ascending')
       .limit(5)
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
