@@ -44,6 +44,8 @@ module Facet {
     attribute?: Expression;
     offset?: number;
     size?: number;
+    lowerLimit?: number;
+    upperLimit?: number;
     duration?: Duration;
     timezone?: Timezone;
     part?: string;
@@ -67,6 +69,8 @@ module Facet {
     attribute?: ExpressionJS;
     offset?: number;
     size?: number;
+    lowerLimit?: number;
+    upperLimit?: number;
     duration?: string;
     timezone?: string;
     part?: string;

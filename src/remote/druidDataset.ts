@@ -45,7 +45,12 @@ module Facet {
     intervals: string[];
   }
 
-  export interface DruidSplit {
+  export interface AggregationsAndPostAggregations {
+    aggregations: Druid.Aggregation[];
+    postAggregations: Druid.PostAggregation[];
+  }
+
+  export interface DruidSplit extends AggregationsAndPostAggregations {
     queryType: string;
     granularity: any;
     dimension?: string | Druid.DimensionSpec;
@@ -55,11 +60,6 @@ module Facet {
 
   interface LabelProcess {
     (v: any): any;
-  }
-
-  export interface AggregationsAndPostAggregations {
-    aggregations: Druid.Aggregation[];
-    postAggregations: Druid.PostAggregation[];
   }
 
   function cleanDatumInPlace(datum: Datum): void {
@@ -576,7 +576,7 @@ module Facet {
       }
     }
 
-    public getBucketingDimension(attributeInfo: RangeAttributeInfo, numberBucket: NumberBucketExpression): Druid.ExtractionFn {
+    public getRangeBucketingDimension(attributeInfo: RangeAttributeInfo, numberBucket: NumberBucketExpression): Druid.ExtractionFn {
       var regExp = attributeInfo.getMatchingRegExpString();
       if (numberBucket && numberBucket.offset === 0 && numberBucket.size === attributeInfo.rangeSize) numberBucket = null;
       var bucketing = '';
@@ -610,6 +610,8 @@ return (start < 0 ?'-':'') + parts.join('.');
       var dimension: string | Druid.DimensionSpec = null;
       var dimensions: any[] = null;
       var granularity: any = 'all';
+      var aggregations: Druid.Aggregation[] = null;
+      var postAggregations: Druid.PostAggregation[] = null;
       var postProcess: PostProcess = null;
 
       if (splitExpression instanceof RefExpression) {
@@ -624,7 +626,7 @@ return (start < 0 ?'-':'') + parts.join('.');
               type: "extraction",
               dimension: splitExpression.name,
               outputName: label,
-              extractionFn: this.getBucketingDimension(attributeInfo, null)
+              extractionFn: this.getRangeBucketingDimension(attributeInfo, null)
             };
             postProcess = postProcessTopNFactory(postProcessNumberBucketFactory(attributeInfo.rangeSize), label);
           } else {
@@ -706,33 +708,58 @@ return (start < 0 ?'-':'') + parts.join('.');
         if (refExpression instanceof RefExpression) {
           var attributeInfo = this.getAttributesInfo(refExpression.name);
           queryType = "topN";
-          switch (attributeInfo.type) {
-            case 'NUMBER':
-              var floorExpression = continuousFloorExpression("d", "Math.floor", splitExpression.size, splitExpression.offset);
-              dimension = {
-                type: "extraction",
-                dimension: refExpression.name,
-                outputName: label,
-                extractionFn: {
-                  type: "javascript",
-                  'function': `function(d){d=Number(d); if(isNaN(d)) return 'null'; return ${floorExpression};}`
-                }
-              };
-              postProcess = postProcessTopNFactory(Number, label);
-              break;
+          if (attributeInfo.type === 'NUMBER') {
+            var floorExpression = continuousFloorExpression("d", "Math.floor", splitExpression.size, splitExpression.offset);
+            dimension = {
+              type: "extraction",
+              dimension: refExpression.name,
+              outputName: label,
+              extractionFn: {
+                type: "javascript",
+                'function': `function(d){d=Number(d); if(isNaN(d)) return 'null'; return ${floorExpression};}`
+              }
+            };
+            postProcess = postProcessTopNFactory(Number, label);
 
-            case 'NUMBER_RANGE':
-              dimension = {
-                type: "extraction",
-                dimension: refExpression.name,
-                outputName: label,
-                extractionFn: this.getBucketingDimension(<RangeAttributeInfo>attributeInfo, splitExpression)
-              };
-              postProcess = postProcessTopNFactory(postProcessNumberBucketFactory(splitExpression.size), label);
-              break;
+          } else if (attributeInfo instanceof RangeAttributeInfo) {
+            dimension = {
+              type: "extraction",
+              dimension: refExpression.name,
+              outputName: label,
+              extractionFn: this.getRangeBucketingDimension(<RangeAttributeInfo>attributeInfo, splitExpression)
+            };
+            postProcess = postProcessTopNFactory(postProcessNumberBucketFactory(splitExpression.size), label);
 
-            default:
-              throw new Error("can not number bucket an attribute of type: " + attributeInfo.type)
+          } else if (attributeInfo instanceof HistogramAttributeInfo) {
+            if (this.exactResultsOnly) {
+              throw new Error("can not use approximate histograms in exactResultsOnly mode");
+            }
+            var aggregation: Druid.Aggregation = {
+              type: "approxHistogramFold",
+              fieldName: refExpression.name
+            };
+            if (splitExpression.lowerLimit != null) {
+              aggregation.lowerLimit = splitExpression.lowerLimit;
+            }
+            if (splitExpression.upperLimit != null) {
+              aggregation.upperLimit = splitExpression.upperLimit;
+            }
+            //var options = split.options || {};
+            //if (hasOwnProperty(options, 'druidResolution')) {
+            //  aggregation.resolution = options['druidResolution'];
+            //}
+
+            aggregations = [aggregation];
+            postAggregations = [{
+              type: "buckets",
+              name: "histogram",
+              fieldName: "histogram",
+              bucketSize: splitExpression.size,
+              offset: splitExpression.offset
+            }];
+
+          } else {
+            throw new Error("can not number bucket an attribute of type: " + attributeInfo.type);
           }
 
         } else {
@@ -748,6 +775,8 @@ return (start < 0 ?'-':'') + parts.join('.');
         granularity: granularity,
         dimension: dimension,
         dimensions: dimensions,
+        aggregations: aggregations,
+        postAggregations: postAggregations,
         postProcess: postProcess
       };
     }
@@ -1097,6 +1126,8 @@ return (start < 0 ?'-':'') + parts.join('.');
           druidQuery.granularity = splitSpec.granularity;
           if (splitSpec.dimension) druidQuery.dimension = splitSpec.dimension;
           if (splitSpec.dimensions) druidQuery.dimensions = splitSpec.dimensions;
+          if (splitSpec.aggregations) druidQuery.aggregations = splitSpec.aggregations;
+          if (splitSpec.postAggregations) druidQuery.postAggregations = splitSpec.postAggregations;
           var postProcess = splitSpec.postProcess;
 
           // Combine

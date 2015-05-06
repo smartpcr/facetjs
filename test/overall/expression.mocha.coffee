@@ -15,8 +15,6 @@ facet = require('../../build/facet')
 # 'LiteralExpression with time range', { op: 'literal', value: { start: ..., end: ...} }
 # 'InExpression with time', { op: 'in', lhs: TIME, rhs: TIME_RANGE }
 # 'OffsetExpression', { op: 'offset', operand: TIME, offset: 'P1D' }
-# 'BucketExpression', { op: 'bucket', operand: NUMERIC, size: 0.05, offset: 0.01 }
-# 'BucketExpression', { op: 'bucket', operand: TIME, duration: 'P1D' }
 # 'RangeExpression with time', { op: 'range', lhs: TIME, rhs: TIME }
 
 describe "Expression", ->
@@ -64,8 +62,15 @@ describe "Expression", ->
       { op: 'multiply', operands: [{ op: 'literal', value: 5 }, { op: 'literal', value: -12 }, { op: 'literal', value: 0.4 }] }
       { op: 'reciprocate', operand: { op: 'literal', value: 5 } }
 
+      { op: 'numberBucket', operand: { op: 'ref', name: 'num' }, size: 1 }
+      { op: 'numberBucket', operand: { op: 'ref', name: 'num' }, size: 0.05, offset: 0.01 }
+      { op: 'numberBucket', operand: { op: 'ref', name: 'num' }, size: 1, lowerLimit: 0, upperLimit: 5 }
+      { op: 'numberBucket', operand: { op: 'ref', name: 'num' }, size: 1, lowerLimit: -8, upperLimit: 0 }
+      { op: 'numberBucket', operand: { op: 'ref', name: 'num' }, size: 1, lowerLimit: 0 }
+
       { op: 'timeBucket', operand: { op: 'ref', name: 'time' }, duration: 'P1D', timezone: 'Etc/UTC' }
       { op: 'timeBucket', operand: { op: 'ref', name: 'time' }, duration: 'PT1H', timezone: 'Etc/UTC' }
+      { op: 'timeBucket', operand: { op: 'ref', name: 'time' }, duration: 'PT1H', timezone: 'America/Los_Angeles' }
 
       { op: 'aggregate', operand: { op: 'ref', name: 'diamonds', type: 'DATASET' }, fn: 'sum', attribute: { op: 'ref', name: 'added' } }
       { op: 'aggregate', operand: { op: 'ref', name: 'diamonds', type: 'DATASET' }, fn: 'min', attribute: { op: 'ref', name: 'added' } }
