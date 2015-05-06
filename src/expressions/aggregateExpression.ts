@@ -115,12 +115,12 @@ module Facet {
       throw new Error("can not getSQL with complex operand");
     }
 
-    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
-      return this.attribute ? this.attribute._everyHelper(iter, thisArg, indexer, depth + 1, genDiff + 1) : true;
+    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+      return this.attribute ? this.attribute._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff + 1) : true;
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Expression {
-      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, genDiff);
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
         return sub;
@@ -128,10 +128,10 @@ module Facet {
         indexer.index++;
       }
 
-      var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, genDiff);
+      var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff);
       var subAttribute: Expression = null;
       if (this.attribute) {
-        subAttribute = this.attribute._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, genDiff + 1);
+        subAttribute = this.attribute._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff + 1);
       }
       if (this.operand === subOperand && this.attribute === subAttribute) return this;
 

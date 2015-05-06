@@ -89,7 +89,7 @@ module Facet {
       };
     }
 
-    public getJSExpression(): string {
+    public getJSExpression(datumVar: string): string {
       throw new Error("can not call getJSExpression on actions");
     }
 
@@ -154,13 +154,13 @@ module Facet {
       return new ActionsExpression(simpleValue);
     }
 
-    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
+    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
       var actions = this.actions;
       var every: boolean = true;
       for (var i = 0; i < actions.length; i++) {
         var action = actions[i];
         if (every) {
-          every = action._everyHelper(iter, thisArg, indexer, depth + 1, genDiff + 1);
+          every = action._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff + 1);
         } else {
           indexer.index += action.expressionCount();
         }
@@ -168,8 +168,8 @@ module Facet {
       return every;
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Expression {
-      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, genDiff);
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
         return sub;
@@ -177,8 +177,8 @@ module Facet {
         indexer.index++;
       }
 
-      var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, genDiff);
-      var subActions = this.actions.map((action) => action._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, genDiff + 1));
+      var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff);
+      var subActions = this.actions.map((action) => action._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff + 1));
       if (this.operand === subOperand && arraysEqual(this.actions, subActions)) return this;
 
       var value = this.valueOf();

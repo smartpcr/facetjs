@@ -1,14 +1,14 @@
 module Facet {
   export interface SubstitutionFn {
-    (ex: Expression, index?: number, depth?: number, genDiff?: number): Expression;
+    (ex: Expression, index?: number, depth?: number, nestDiff?: number): Expression;
   }
 
   export interface BooleanExpressionIterator {
-    (ex: Expression, index?: number, depth?: number, genDiff?: number): boolean;
+    (ex: Expression, index?: number, depth?: number, nestDiff?: number): boolean;
   }
 
   export interface VoidExpressionIterator {
-    (ex: Expression, index?: number, depth?: number, genDiff?: number): void;
+    (ex: Expression, index?: number, depth?: number, nestDiff?: number): void;
   }
 
   export interface DatasetBreakdown {
@@ -49,6 +49,7 @@ module Facet {
     part?: string;
     position?: number;
     length?: number;
+    nest?: number;
   }
 
   export interface ExpressionJS {
@@ -71,6 +72,7 @@ module Facet {
     part?: string;
     position?: number;
     length?: number;
+    nest?: number;
   }
 
   export interface Separation {
@@ -114,13 +116,7 @@ module Facet {
   export function $(input: any = null): Expression {
     if (input) {
       if (typeof input === 'string') {
-        var parts = input.split(':');
-        var refValue: ExpressionValue = {
-          op: 'ref',
-          name: parts[0]
-        };
-        if (parts.length > 1) refValue.type = parts[1];
-        return new RefExpression(refValue);
+        return RefExpression.parse(input);
       } else {
         return new LiteralExpression({ op: 'literal', value: input });
       }
@@ -405,9 +401,9 @@ module Facet {
      */
     public getFreeReferences(): string[] {
       var freeReferences: string[] = [];
-      this.forEach((ex: Expression, index: number, depth: number, genDiff: number) => {
-        if (ex instanceof RefExpression && genDiff <= ex.generations.length) {
-          freeReferences.push(repeat('^', ex.generations.length - genDiff) + ex.name);
+      this.forEach((ex: Expression, index: number, depth: number, nestDiff: number) => {
+        if (ex instanceof RefExpression && nestDiff <= ex.nest) {
+          freeReferences.push(repeat('^', ex.nest - nestDiff) + ex.name);
         }
       });
       return deduplicateSort(freeReferences);
@@ -420,8 +416,8 @@ module Facet {
      */
     public getFreeReferenceIndexes(): number[] {
       var freeReferenceIndexes: number[] = [];
-      this.forEach((ex: Expression, index: number, depth: number, genDiff: number) => {
-        if (ex instanceof RefExpression && genDiff <= ex.generations.length) {
+      this.forEach((ex: Expression, index: number, depth: number, nestDiff: number) => {
+        if (ex instanceof RefExpression && nestDiff <= ex.nest) {
           freeReferenceIndexes.push(index);
         }
       });
@@ -435,14 +431,11 @@ module Facet {
      * @returns {any}
      */
     public incrementNesting(by: number = 1): Expression {
-      var add = repeat('^', by);
       var freeReferenceIndexes = this.getFreeReferenceIndexes();
       if (freeReferenceIndexes.length === 0) return this;
       return this.substitute((ex: Expression, index: number) => {
         if (ex instanceof RefExpression && freeReferenceIndexes.indexOf(index) !== -1) {
-          var value = ex.valueOf();
-          value.name = add + value.name;
-          return new RefExpression(value);
+          return ex.incrementNesting(by);
         }
         return null;
       });
@@ -487,8 +480,8 @@ module Facet {
       return this._everyHelper(iter, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
-      return iter.call(thisArg, this, indexer.index, depth, genDiff) !== false;
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+      return iter.call(thisArg, this, indexer.index, depth, nestDiff) !== false;
     }
 
     /**
@@ -499,8 +492,8 @@ module Facet {
      * @returns {boolean}
      */
     public some(iter: BooleanExpressionIterator, thisArg?: any): boolean {
-      return !this.every((ex: Expression, index: number, depth: number, genDiff: number) => {
-        var v = iter.call(this, ex, index, depth, genDiff);
+      return !this.every((ex: Expression, index: number, depth: number, nestDiff: number) => {
+        var v = iter.call(this, ex, index, depth, nestDiff);
         return (v == null) ? null : !v;
       }, thisArg);
     }
@@ -513,8 +506,8 @@ module Facet {
      * @returns {boolean}
      */
     public forEach(iter: VoidExpressionIterator, thisArg?: any): void {
-      this.every((ex: Expression, index: number, depth: number, genDiff: number) => {
-        iter.call(this, ex, index, depth, genDiff);
+      this.every((ex: Expression, index: number, depth: number, nestDiff: number) => {
+        iter.call(this, ex, index, depth, nestDiff);
         return null;
       }, thisArg);
     }
@@ -530,8 +523,8 @@ module Facet {
       return this._substituteHelper(substitutionFn, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Expression {
-      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, genDiff);
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
         return sub;
@@ -547,12 +540,12 @@ module Facet {
       throw new Error('should never be called directly');
     }
 
-    public getJSExpression(): string {
+    public getJSExpression(datumVar: string): string {
       throw new Error('should never be called directly');
     }
 
     public getJSFn(): string {
-      return `function(d){return ${this.getJSExpression()};}`;
+      return `function(d){return ${this.getJSExpression('d')};}`;
     }
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
@@ -606,7 +599,8 @@ module Facet {
 
         return new RefExpression({
           op: 'ref',
-          name: tempName
+          name: tempName,
+          nest: 0
         })
       });
       return {
@@ -746,7 +740,7 @@ module Facet {
       }
       var incrementedSelf = this.incrementNesting(1);
       return this.group(attribute).label(name)
-        .def(newDataName || dataName, incrementedSelf.filter(attribute.is($('^' + name))));
+        .def(newDataName || dataName, incrementedSelf.filter(attribute.is($(name).incrementNesting(1))));
     }
 
     // Expression constructors (Binary)
@@ -872,10 +866,10 @@ module Facet {
      * @return The resolved expression
      */
     public resolve(context: Datum, leaveIfNotFound: boolean = false): Expression {
-      return this.substitute((ex: Expression, index: number, depth: number, genDiff: number) => {
+      return this.substitute((ex: Expression, index: number, depth: number, nestDiff: number) => {
         if (ex instanceof RefExpression) {
-          var refGen = ex.generations.length;
-          if (genDiff === refGen) {
+          var refGen = ex.nest;
+          if (nestDiff === refGen) {
             var foundValue: any = null;
             var valueFound: boolean = false;
             if (hasOwnProperty(context, ex.name)) {
@@ -895,7 +889,7 @@ module Facet {
             if (valueFound) {
               return new LiteralExpression({op: 'literal', value: foundValue});
             }
-          } else if (genDiff < refGen) {
+          } else if (nestDiff < refGen) {
             throw new Error('went too deep during resolve on: ' + ex.toString());
           }
         }
@@ -905,7 +899,7 @@ module Facet {
 
     public resolved(): boolean {
       return this.every((ex: Expression) => {
-        return (ex instanceof RefExpression) ? ex.generations.length === 0 : null; // Search within
+        return (ex instanceof RefExpression) ? ex.nest === 0 : null; // Search within
       })
     }
 

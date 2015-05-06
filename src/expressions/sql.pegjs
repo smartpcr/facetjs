@@ -286,9 +286,9 @@ RefExpression
   = ref:Ref { return $(ref); }
 
 Ref
-  = name:RefName !{ return reserved(name); }
+  = name:Name !{ return reserved(name); }
     { return name }
-  / "`" name:RefName "`"
+  / "`" name:$([^`]+) "`"
     { return name }
 
 NameOrString = Name / String
@@ -392,9 +392,6 @@ Digit
 
 Name "Name"
   = $([a-zA-Z_] [a-z0-9A-Z_]*)
-
-RefName "RefName"
-  = $("^"* Name)
 
 NotSQuote "NotSQuote"
   = $([^']*)

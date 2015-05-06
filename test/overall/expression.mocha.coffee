@@ -8,36 +8,40 @@ if not WallTime.rules
   WallTime.init(tzData.rules, tzData.zones)
 
 facet = require('../../build/facet')
-{ Expression, $ } = facet
+{ Expression, $, RefExpression } = facet
 
 # TODO: Make these as test cases too
-# describe 'LiteralExpression with dataset', -> beforeEach -> this.expression = Expression.fromJS({ op: 'literal', value: <Dataset> })
-# describe 'LiteralExpression with time', -> beforeEach -> this.expression = Expression.fromJS({ op: 'literal', value: Time })
-# describe 'LiteralExpression with time range', -> beforeEach -> this.expression = Expression.fromJS({ op: 'literal', value: { start: ..., end: ...} })
-# describe 'InExpression with time', -> beforeEach -> this.expression = Expression.fromJS({ op: 'in', lhs: TIME, rhs: TIME_RANGE })
-# describe 'AggregateExpression', -> beforeEach -> this.expression = Expression.fromJS({ op: 'aggregate', operand: DATASET, aggregate: 'sum', attribute: EXPRESSION })
-# describe 'OffsetExpression', -> beforeEach -> this.expression = Expression.fromJS({ op: 'offset', operand: TIME, offset: 'P1D' })
-# describe 'BucketExpression', -> beforeEach -> this.expression = Expression.fromJS({ op: 'bucket', operand: NUMERIC, size: 0.05, offset: 0.01 })
-# describe 'BucketExpression', -> beforeEach -> this.expression = Expression.fromJS({ op: 'bucket', operand: TIME, duration: 'P1D' })
-# describe 'RangeExpression with time', -> beforeEach -> this.expression = Expression.fromJS({ op: 'range', lhs: TIME, rhs: TIME })
-# describe 'SplitExpression', -> beforeEach -> this.expression = Expression.fromJS({ op: 'split', operand: DATASET, attribute: EXPRESSION, name: 'splits' })
+# 'LiteralExpression with time', { op: 'literal', value: Time }
+# 'LiteralExpression with time range', { op: 'literal', value: { start: ..., end: ...} }
+# 'InExpression with time', { op: 'in', lhs: TIME, rhs: TIME_RANGE }
+# 'OffsetExpression', { op: 'offset', operand: TIME, offset: 'P1D' }
+# 'BucketExpression', { op: 'bucket', operand: NUMERIC, size: 0.05, offset: 0.01 }
+# 'BucketExpression', { op: 'bucket', operand: TIME, duration: 'P1D' }
+# 'RangeExpression with time', { op: 'range', lhs: TIME, rhs: TIME }
 
 describe "Expression", ->
   it "passes higher object tests", ->
     testHigherObjects(Expression, [
+      { op: 'literal', value: null }
+      { op: 'literal', value: false }
       { op: 'literal', value: true }
-      { op: 'literal', value: 'Honda' }
+      { op: 'literal', value: 0 }
+      { op: 'literal', value: 0.1 }
       { op: 'literal', value: 6 }
+      { op: 'literal', value: '' }
+      { op: 'literal', value: 'Honda' }
+      { op: 'literal', value: { setType: 'STRING', elements: [] }, type: 'SET' }
       { op: 'literal', value: { setType: 'STRING', elements: ['BMW', 'Honda', 'Suzuki'] }, type: 'SET' }
       { op: 'literal', value: { setType: 'NUMBER', elements: [0.05, 0.1] }, type: 'SET' }
-      { op: 'literal', value: null }
+      { op: 'literal', value: [{}], type: 'DATASET' }
 
       { op: 'ref', name: 'authors' }
       { op: 'ref', name: 'flight_time' }
       { op: 'ref', name: 'timestamp' }
-      { op: 'ref', name: '^timestamp' }
-      { op: 'ref', name: '^^timestamp' }
-      { op: 'ref', type: 'STRING', name: 'make' }
+      { op: 'ref', name: 'timestamp', nest: 1 }
+      { op: 'ref', name: 'timestamp', nest: 2 }
+      { op: 'ref', name: 'make', type: 'STRING' }
+      { op: 'ref', name: 'a fish will "save" you - lol / (or not)' }
 
       { op: 'is', lhs: { op: 'literal', value: 5 }, rhs: { op: 'literal', value: 5 } }
       { op: 'is', lhs: { op: 'literal', value: 5 }, rhs: { op: 'ref', name: 'flight_time' } }
@@ -48,7 +52,7 @@ describe "Expression", ->
       { op: 'greaterThan', lhs: { op: 'literal', value: 5 }, rhs: { op: 'ref', name: 'flight_time' } }
       { op: 'greaterThanOrEqual', lhs: { op: 'literal', value: 5 }, rhs: { op: 'literal', value: 5 } }
       { op: 'greaterThanOrEqual', lhs: { op: 'literal', value: 5 }, rhs: { op: 'ref', name: 'flight_time' } }
-      #{ op: 'in', lhs: { op: 'literal', value: 'Honda' }, rhs: { op: 'literal', value: ['Honda', 'BMW', 'Suzuki'] } }
+      { op: 'in', lhs: { op: 'literal', value: 'Honda' }, rhs: { op: 'literal', value: { setType: 'STRING', elements: ['BMW', 'Honda', 'Suzuki'] }, type: 'SET' } }
       #{ op: 'in', lhs: { op: 'literal', value: 5 }, rhs: { op: 'literal', value: [0.05, 0.1] } }
       { op: 'match', regexp: '^\d+', operand: { op: 'literal', value: 'Honda' } }
       { op: 'not', operand: { op: 'literal', value: true } }
@@ -127,6 +131,45 @@ describe "Expression", ->
           lhs: { op: 'literal', value: 5 }
         })
       ).to.throw('must have a rhs')
+
+
+  describe "fancy names", ->
+    it "behaves corretly with spaces", ->
+      expect($("I blame your mother").toJS()).to.deep.equal({
+        "op": "ref"
+        "name": "I blame your mother"
+      })
+
+    it "works with fromJSLoose", ->
+      expect(Expression.fromJSLoose("$^^{and do don't call me shirley}").toJS()).to.deep.equal({
+        "op": "ref"
+        "name": "and do don't call me shirley"
+        "nest": 2
+      })
+
+    it "works with ref expression parse", ->
+      expect(RefExpression.parse("{how are you today?}:NUMBER").toJS()).to.deep.equal({
+        "op": "ref"
+        "name": "how are you today?"
+        "type": "NUMBER"
+      })
+
+    it "parses", ->
+      expect(Expression.parse("$^{hello 'james'} + ${how are you today?}:NUMBER").toJS()).to.deep.equal({
+        "op": "add"
+        "operands": [
+          {
+            "nest": 1
+            "name": "hello 'james'"
+            "op": "ref"
+          }
+          {
+            "name": "how are you today?"
+            "op": "ref"
+            "type": "NUMBER"
+          }
+        ]
+      })
 
 
   describe "#getFn", ->

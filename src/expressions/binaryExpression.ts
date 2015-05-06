@@ -100,20 +100,20 @@ module Facet {
       }
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, genDiff: number): boolean {
-      var pass = iter.call(thisArg, this, indexer.index, depth, genDiff);
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+      var pass = iter.call(thisArg, this, indexer.index, depth, nestDiff);
       if (pass != null) {
         return pass;
       } else {
         indexer.index++;
       }
 
-      return this.lhs._everyHelper(iter, thisArg, indexer, depth + 1, genDiff)
-          && this.rhs._everyHelper(iter, thisArg, indexer, depth + 1, genDiff);
+      return this.lhs._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff)
+          && this.rhs._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, genDiff: number): Expression {
-      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, genDiff);
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+      var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
         return sub;
@@ -121,8 +121,8 @@ module Facet {
         indexer.index++;
       }
 
-      var subLhs = this.lhs._substituteHelper(substitutionFn, thisArg, indexer, depth, genDiff);
-      var subRhs = this.rhs._substituteHelper(substitutionFn, thisArg, indexer, depth, genDiff);
+      var subLhs = this.lhs._substituteHelper(substitutionFn, thisArg, indexer, depth, nestDiff);
+      var subRhs = this.rhs._substituteHelper(substitutionFn, thisArg, indexer, depth, nestDiff);
       if (this.lhs === subLhs && this.rhs === subRhs) return this;
 
       var value = this.valueOf();
@@ -144,8 +144,8 @@ module Facet {
       throw new Error("should never be called directly");
     }
 
-    public getJSExpression(): string {
-      return this._getJSExpressionHelper(this.lhs.getJSExpression(), this.rhs.getJSExpression())
+    public getJSExpression(datumVar: string): string {
+      return this._getJSExpressionHelper(this.lhs.getJSExpression(datumVar), this.rhs.getJSExpression(datumVar))
     }
 
     protected _getSQLHelper(lhsSQL: string, rhsSQL: string, dialect: SQLDialect, minimal: boolean): string {
@@ -154,13 +154,6 @@ module Facet {
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
       return this._getSQLHelper(this.lhs.getSQL(dialect, minimal), this.rhs.getSQL(dialect, minimal), dialect, minimal);
-    }
-
-    protected _checkTypeOf(lhsRhs: string, wantedType: string): void {
-      var operand: Expression = (<any>this)[lhsRhs];
-      if (!operand.canHaveType(wantedType)) {
-        throw new TypeError(this.op + ' ' + lhsRhs + ' must be of type ' + wantedType);
-      }
     }
 
     public _fillRefSubstitutions(typeContext: FullType, indexer: Indexer, alterations: Alterations): FullType {

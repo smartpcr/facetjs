@@ -273,3 +273,24 @@ describe "SQL parser", ->
       )
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
+
+  it "should work with fancy names", ->
+    ex = Expression.parseSQL("""
+      SELECT
+      `page or else?` AS 'Page',
+      SUM(added) AS 'TotalAdded'
+      FROM `wiki-tiki:taki`
+      WHERE `language`="en" AND `time` BETWEEN '2015-01-01T10:30:00' AND '2015-01-02T12:30:00'
+      GROUP BY `page or else?`
+      """)
+
+    ex2 = $('wiki-tiki:taki').filter(
+      $('language').is("en").and($('time').in({
+        start: new Date('2015-01-01T10:30:00'),
+        end: new Date('2015-01-02T12:30:00'),
+        bounds: '[]'
+      }))
+    ).split('${page or else?}', 'Page', 'data')
+      .apply('TotalAdded', '$data.sum($added)')
+
+    expect(ex.toJS()).to.deep.equal(ex2.toJS())
