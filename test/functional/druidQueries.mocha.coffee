@@ -8,13 +8,17 @@ if not WallTime.rules
 { druidRequesterFactory } = require('facetjs-druid-requester')
 
 facet = require('../../build/facet')
-{ Expression, Dataset, TimeRange, $, basicDispatcherFactory } = facet
+{ Expression, Dataset, TimeRange, $, basicDispatcherFactory, helper } = facet
 
 info = require('../info')
 
 druidRequester = druidRequesterFactory({
   host: info.druidHost
 })
+
+#druidRequester = helper.verboseRequesterFactory({
+#  requester: druidRequester
+#})
 
 describe "DruidDataset", ->
   @timeout(10000);
@@ -34,6 +38,7 @@ describe "DruidDataset", ->
             user: { type: 'STRING' }
             added: { type: 'NUMBER' }
             count: { type: 'NUMBER' }
+            unique_users: { special: 'unique' }
           }
           filter: $('time').in(TimeRange.fromJS({
             start: new Date("2013-02-26T00:00:00Z")
@@ -189,6 +194,25 @@ describe "DruidDataset", ->
         testComplete()
       ).done()
 
+    it "works with uniques", (testComplete) ->
+      ex = $()
+        .apply('UniquePages', $('wiki').countDistinct("$page"))
+        .apply('UniqueUsers1', $('wiki').countDistinct("$user"))
+        .apply('UniqueUsers2', $('wiki').countDistinct("$unique_users"))
+        .apply('Diff', '$UniqueUsers1 - $UniqueUsers2')
+
+      basicDispatcher(ex).then((result) ->
+        expect(result.toJS()).to.deep.equal([
+          {
+            "Diff": 1969.3654788279018
+            "UniquePages": 457035.7144048186
+            "UniqueUsers1": 49498.509337114636
+            "UniqueUsers2": 47529.143858286734
+          }
+        ])
+        testComplete()
+      ).done()
+
     it "works with no applies in dimensions split dataset", (testComplete) ->
       ex = $()
         .apply('Pages',
@@ -200,7 +224,7 @@ describe "DruidDataset", ->
                 .apply('Count', $('wiki').count())
                 .sort('$Count', 'descending')
                 .limit(2)
-          )
+            )
         )
 
       basicDispatcher(ex).then((result) ->

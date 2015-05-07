@@ -17,7 +17,7 @@ attributes = {
   height_bucket: { special: 'range', separator: ';', rangeSize: 0.05, digitsAfterDecimal: 2 }
   price: { type: 'NUMBER', filterable: false, splitable: false }
   tax: { type: 'NUMBER', filterable: false, splitable: false }
-  unique_views: { special: 'unique', filterable: false, splitable: false }
+  vendor_id: { special: 'unique', filterable: false, splitable: false }
 }
 
 context = {
@@ -884,5 +884,54 @@ describe "simulate Druid", ->
       {
         "dataSource": "diamonds-alt:;<>"
         "queryType": "timeBoundary"
+      }
+    ])
+
+  it "makes a query with countDistinct", ->
+    ex = $()
+      .apply('NumColors', '$diamonds.countDistinct($color)')
+      .apply('NumVendors', '$diamonds.countDistinct($vendor_id)')
+      .apply('VendorsByColors', '$NumVendors / $NumColors')
+
+    expect(ex.simulateQueryPlan(context)).to.deep.equal([
+      {
+        "aggregations": [
+          {
+            "byRow": true
+            "fieldNames": [
+              "color"
+            ]
+            "name": "NumColors"
+            "type": "cardinality"
+          }
+          {
+            "fieldName": "vendor_id"
+            "name": "NumVendors"
+            "type": "hyperUnique"
+          }
+        ]
+        "dataSource": "diamonds"
+        "granularity": "all"
+        "intervals": [
+          "2015-03-12/2015-03-19"
+        ]
+        "postAggregations": [
+          {
+            "fields": [
+              {
+                "fieldName": "NumVendors"
+                "type": "hyperUniqueCardinality"
+              }
+              {
+                "fieldName": "NumColors"
+                "type": "hyperUniqueCardinality"
+              }
+            ]
+            "fn": "/"
+            "name": "VendorsByColors"
+            "type": "arithmetic"
+          }
+        ]
+        "queryType": "timeseries"
       }
     ])

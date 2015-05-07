@@ -724,6 +724,7 @@ module Facet {
     public min(attr: any) { return this._performAggregate('min', attr); }
     public max(attr: any) { return this._performAggregate('max', attr); }
     public average(attr: any) { return this._performAggregate('average', attr); }
+    public countDistinct(attr: any) { return this._performAggregate('countDistinct', attr); }
     public quantile(attr: any, value: number) { return this._performAggregate('quantile', attr, value); }
     public group(attr: any) { return this._performAggregate('group', attr); }
 

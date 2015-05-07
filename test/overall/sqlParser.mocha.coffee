@@ -40,13 +40,20 @@ describe "SQL parser", ->
   it "should parse a total expression with all sorts of applies", ->
     ex = Expression.parseSQL("""
       SELECT
+      COUNT()  AS Count1,
+      COUNT(*) AS Count2,
+      COUNT(1) AS Count3,
+      COUNT(visitor) AS Count4,
       SUM(added) AS 'TotalAdded',
       '2014-01-02' AS 'Date',
       SUM(added) / 4 AS TotalAddedOver4,
       NOT(true) AS 'False',
       -added AS MinusAdded,
       +added AS SimplyAdded,
-      QUANTILE(added, 0.5) AS Median
+      QUANTILE(added, 0.5) AS Median,
+      COUNT_DISTINCT(visitor) AS 'Unique1',
+      COUNT(DISTINCT visitor) AS 'Unique2',
+      COUNT(DISTINCT(visitor)) AS 'Unique3'
       FROM `wiki`
       WHERE `language`="en"    -- This is just some comment
       GROUP BY ''
@@ -54,6 +61,10 @@ describe "SQL parser", ->
 
     ex2 = $()
       .def('data', '$wiki.filter($language = "en")')
+      .apply('Count1', '$data.count()')
+      .apply('Count2', '$data.count()')
+      .apply('Count3', '$data.count()')
+      .apply('Count4', '$data.count()')
       .apply('TotalAdded', '$data.sum($added)')
       .apply('Date', new Date('2014-01-02T00:00:00.000Z'))
       .apply('TotalAddedOver4', '$data.sum($added) / 4')
@@ -61,6 +72,9 @@ describe "SQL parser", ->
       .apply('MinusAdded', $('added').negate())
       .apply('SimplyAdded', $('added'))
       .apply('Median', $('data').quantile('$added', 0.5))
+      .apply('Unique1', $('data').countDistinct('$visitor'))
+      .apply('Unique2', $('data').countDistinct('$visitor'))
+      .apply('Unique3', $('data').countDistinct('$visitor'))
 
     expect(ex.toJS()).to.deep.equal(ex2.toJS())
 

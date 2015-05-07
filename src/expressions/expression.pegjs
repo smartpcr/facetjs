@@ -28,12 +28,12 @@ var possibleCalls = {
   'sort': 1,
   'limit': 1,
   'count': 1,
+  'countDistinct': 1,
   'sum': 1,
   'max': 1,
   'min': 1,
   'average': 1,
   'quantile': 1,
-  'uniqueCount': 1,
   'group': 1,
   'label': 1,
   'split': 1

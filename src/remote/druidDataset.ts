@@ -781,22 +781,33 @@ return (start < 0 ?'-':'') + parts.join('.');
       };
     }
 
-    public operandsToArithmetic(operands: Expression[], fn: string): Druid.PostAggregation {
+    public operandsToArithmetic(operands: Expression[], fn: string, aggregations: Druid.Aggregation[]): Druid.PostAggregation {
       if (operands.length === 1) {
-        return this.expressionToPostAggregation(operands[0]);
+        return this.expressionToPostAggregation(operands[0], aggregations);
       } else {
         return {
           type: 'arithmetic',
           fn: fn,
-          fields: operands.map(this.expressionToPostAggregation, this)
+          fields: operands.map((operand) => {
+            return this.expressionToPostAggregation(operand, aggregations);
+          }, this)
         };
       }
     }
 
-    public expressionToPostAggregation(ex: Expression): Druid.PostAggregation {
+    public expressionToPostAggregation(ex: Expression, aggregations: Druid.Aggregation[]): Druid.PostAggregation {
       if (ex instanceof RefExpression) {
+        var refName = ex.name;
+        var accessType: string;
+        for (var i = 0; i < aggregations.length; i++) {
+          var aggregation = aggregations[i];
+          if (aggregation.name === refName) {
+            var aggType = aggregation.type;
+            accessType = (aggType === 'hyperUnique' || aggType === 'cardinality') ? 'hyperUniqueCardinality' : 'fieldAccess';
+          }
+        }
         return {
-          type: 'fieldAccess', // or "hyperUniqueCardinality"
+          type: accessType,
           fieldName: ex.name
         };
       } else if (ex instanceof LiteralExpression) {
@@ -830,12 +841,12 @@ return (start < 0 ?'-':'') + parts.join('.');
             type: 'arithmetic',
             fn: antiFn,
             fields: [
-              this.operandsToArithmetic(additive, fn),
-              this.operandsToArithmetic(subtractive.map((op) => (<UnaryExpression>op).operand), fn)
+              this.operandsToArithmetic(additive, fn, aggregations),
+              this.operandsToArithmetic(subtractive.map((op) => (<UnaryExpression>op).operand), fn, aggregations)
             ]
           };
         } else {
-          return this.operandsToArithmetic(additive, fn);
+          return this.operandsToArithmetic(additive, fn, aggregations);
         }
 
       } else {
@@ -843,9 +854,9 @@ return (start < 0 ?'-':'') + parts.join('.');
       }
     }
 
-    public actionToPostAggregation(action: Action): Druid.PostAggregation {
+    public actionToPostAggregation(action: Action, aggregations: Druid.Aggregation[]): Druid.PostAggregation {
       if (action instanceof ApplyAction || action instanceof DefAction) {
-        var postAgg = this.expressionToPostAggregation(action.expression);
+        var postAgg = this.expressionToPostAggregation(action.expression, aggregations);
         postAgg.name = action.name;
         return postAgg;
       } else {
@@ -853,39 +864,86 @@ return (start < 0 ?'-':'') + parts.join('.');
       }
     }
 
+    public makeStandardAggregation(name: string, aggregateExpression: AggregateExpression): Druid.Aggregation {
+      var fn = aggregateExpression.fn;
+      var attribute = aggregateExpression.attribute;
+      var aggregation: Druid.Aggregation = {
+        name: name,
+        type: fn === "sum" ? "doubleSum" : fn
+      };
+      if (fn !== 'count') {
+        if (attribute instanceof RefExpression) {
+          aggregation.fieldName = attribute.name;
+        } else {
+          throw new Error('can not support complex derived attributes (yet)');
+        }
+      }
+
+      // See if we want to do a filtered aggregate
+      var aggregateOperand = aggregateExpression.operand;
+      if (aggregateOperand instanceof ActionsExpression &&
+        aggregateOperand.actions.length === 1 &&
+        aggregateOperand.actions[0] instanceof FilterAction &&
+        this.canUseNativeAggregateFilter(aggregateOperand.actions[0].expression)) {
+        aggregation = {
+          type: "filtered",
+          name: name,
+          filter: this.timelessFilterToDruid(aggregateOperand.actions[0].expression),
+          aggregator: aggregation
+        };
+      }
+
+      return aggregation;
+    }
+
+    public makeCountDistinctAggregation(name: string, aggregateExpression: AggregateExpression): Druid.Aggregation {
+      if (this.exactResultsOnly) {
+        throw new Error("approximate query not allowed");
+      }
+      if (aggregateExpression.operand.isOp('actions')) {
+        throw new Error("filtering on countDistinct aggregator isn't supported");
+      }
+
+      var attribute = aggregateExpression.attribute;
+      if (attribute instanceof RefExpression) {
+        var attributeInfo = this.getAttributesInfo(attribute.name);
+        if (attributeInfo instanceof UniqueAttributeInfo) {
+          return {
+            name: name,
+            type: "hyperUnique",
+            fieldName: attribute.name
+          };
+        } else {
+          return {
+            name: name,
+            type: "cardinality",
+            fieldNames: [attribute.name],
+            byRow: true
+          };
+        }
+
+      } else {
+        throw new Error('can not compute distinctCount on derived aggregate');
+      }
+    }
+
     public actionToAggregation(action: Action): Druid.Aggregation {
       if (action instanceof ApplyAction || action instanceof DefAction) {
         var aggregateExpression = action.expression;
         if (aggregateExpression instanceof AggregateExpression) {
-          var attribute = aggregateExpression.attribute;
-          var aggregation: Druid.Aggregation = {
-            name: action.name,
-            type: aggregateExpression.fn === "sum" ? "doubleSum" : aggregateExpression.fn
-          };
-          if (aggregateExpression.fn !== 'count') {
-            if (attribute instanceof RefExpression) {
-              aggregation.fieldName = attribute.name;
-            } else if (attribute) {
-              throw new Error('can not support derived attributes (yet)');
-            }
+          switch (aggregateExpression.fn) {
+            case "count":
+            case "sum":
+            case "min":
+            case "max":
+              return this.makeStandardAggregation(action.name, aggregateExpression);
+
+            case "countDistinct":
+              return this.makeCountDistinctAggregation(action.name, aggregateExpression);
+
+            default:
+              throw new Error(`unsupported aggregate function ${aggregateExpression.fn}`);
           }
-
-          // See if we want to do a filtered aggregate
-          var aggregateOperand = aggregateExpression.operand;
-          if (aggregateOperand instanceof ActionsExpression &&
-            aggregateOperand.actions.length === 1 &&
-            aggregateOperand.actions[0] instanceof FilterAction &&
-            this.canUseNativeAggregateFilter(aggregateOperand.actions[0].expression)) {
-            aggregation = {
-              type: "filtered",
-              name: action.name,
-              filter: this.timelessFilterToDruid(aggregateOperand.actions[0].expression),
-              aggregator: aggregation
-            };
-          }
-
-          return aggregation;
-
         } else {
           throw new Error('can not support non aggregate aggregateExpression');
         }
@@ -914,7 +972,7 @@ return (start < 0 ?'-':'') + parts.join('.');
         if (action.expression instanceof AggregateExpression) {
           aggregations.push(this.actionToAggregation(action));
         } else {
-          postAggregations.push(this.actionToPostAggregation(action));
+          postAggregations.push(this.actionToPostAggregation(action, aggregations));
         }
       });
 
