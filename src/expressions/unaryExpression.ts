@@ -37,7 +37,7 @@ module Facet {
         this.operand.equals(other.operand)
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1 + this.operand.expressionCount();
     }
 

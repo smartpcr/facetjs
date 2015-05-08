@@ -98,11 +98,10 @@ module Facet {
 
   export function mergeRemotes(remotes: string[][]): string[] {
     var lookup: Lookup<boolean> = {};
-    for (var i = 0; i < remotes.length; i++) {
-      var remote = remotes[i];
+    for (let remote of remotes) {
       if (!remote) continue;
-      for (var j = 0; j < remote.length; j++) {
-        lookup[remote[j]] = true;
+      for (let r of remote) {
+        lookup[r] = true;
       }
     }
     var merged = Object.keys(lookup);
@@ -337,7 +336,7 @@ module Facet {
      *
      * @returns {number}
      */
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1;
     }
 
@@ -785,8 +784,8 @@ module Facet {
     // Expression constructors (Nary)
     protected _performNaryExpression(newValue: ExpressionValue, otherExs: any[]): Expression {
       if (!otherExs.length) throw new Error('must have at least one argument');
-      for (var i = 0; i < otherExs.length; i++) {
-        var otherEx = otherExs[i];
+      for (let i = 0; i < otherExs.length; i++) {
+        let otherEx = otherExs[i];
         if (Expression.isExpression(otherEx)) continue;
         otherExs[i] = Expression.fromJSLoose(otherEx);
       }
@@ -797,8 +796,8 @@ module Facet {
     public add(...exs: any[]) { return this._performNaryExpression({ op: 'add' }, exs); }
     public subtract(...exs: any[]) {
       if (!exs.length) throw new Error('must have at least one argument');
-      for (var i = 0; i < exs.length; i++) {
-        var ex = exs[i];
+      for (let i = 0; i < exs.length; i++) {
+        let ex = exs[i];
         if (Expression.isExpression(ex)) continue;
         exs[i] = Expression.fromJSLoose(ex);
       }
@@ -812,8 +811,8 @@ module Facet {
     public multiply(...exs: any[]) { return this._performNaryExpression({ op: 'multiply' }, exs); }
     public divide(...exs: any[]) {
       if (!exs.length) throw new Error('must have at least one argument');
-      for (var i = 0; i < exs.length; i++) {
-        var ex = exs[i];
+      for (let i = 0; i < exs.length; i++) {
+        let ex = exs[i];
         if (Expression.isExpression(ex)) continue;
         exs[i] = Expression.fromJSLoose(ex);
       }
@@ -831,6 +830,7 @@ module Facet {
      * Checks for references and returns the list of alterations that need to be made to the expression
      *
      * @param typeContext the context inherited from the parent
+     * @param indexer the index along the tree to maintain
      * @param alterations the accumulation of the alterations to be made (output)
      * @returns the resolved type of the expression
      * @private

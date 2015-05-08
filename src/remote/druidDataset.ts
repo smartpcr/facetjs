@@ -799,8 +799,7 @@ return (start < 0 ?'-':'') + parts.join('.');
       if (ex instanceof RefExpression) {
         var refName = ex.name;
         var accessType: string;
-        for (var i = 0; i < aggregations.length; i++) {
-          var aggregation = aggregations[i];
+        for (let aggregation of aggregations) {
           if (aggregation.name === refName) {
             var aggType = aggregation.type;
             accessType = (aggType === 'hyperUnique' || aggType === 'cardinality') ? 'hyperUniqueCardinality' : 'fieldAccess';

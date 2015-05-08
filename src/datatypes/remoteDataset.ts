@@ -289,12 +289,12 @@ module Facet {
     public getExistingActionForExpression(expression: Expression): ApplyAction | DefAction {
       var key = expression.toString();
       var defs = this.defs;
-      for (var i = 0; i < defs.length; i++) {
-        if (defs[i].expression.toString() === key) return defs[i];
+      for (let def of defs) {
+        if (def.expression.toString() === key) return def;
       }
       var applies = this.applies;
-      for (var i = 0; i < applies.length; i++) {
-        if (applies[i].expression.toString() === key) return applies[i];
+      for (let apply of applies) {
+        if (apply.expression.toString() === key) return apply;
       }
       return null;
     }
@@ -302,14 +302,14 @@ module Facet {
     public isKnownName(name: string): boolean {
       if (hasOwnProperty(this.attributes, name)) return true;
       var defs = this.defs;
-      for (var i = 0; i < defs.length; i++) {
-        if (defs[i].name === name) return true;
+      for (let def of defs) {
+        if (def.name === name) return true;
       }
       return false;
     }
 
     public getTempName(namesTaken: string[] = []): string {
-      for (var i = 0; i < 1e6; i++) {
+      for (let i = 0; i < 1e6; i++) {
         var name = '_sd_' + i;
         if (namesTaken.indexOf(name) === -1 && !this.isKnownName(name)) return name;
       }
@@ -324,8 +324,8 @@ module Facet {
       if (sortOn !== this.key) return false;
 
       var applies = this.applies;
-      for (var i = 0; i < applies.length; i++) {
-        if (applies[i].name === sortOn) return false;
+      for (let apply of applies) {
+        if (apply.name === sortOn) return false;
       }
       return true;
     }
@@ -485,8 +485,7 @@ module Facet {
         } else {
           if (action.name === this.key) return null;
           var basicActions = this.processApply(action);
-          for (var i = 0; i < basicActions.length; i++) {
-            var basicAction = basicActions[i];
+          for (let basicAction of basicActions) {
             if (basicAction instanceof ApplyAction) {
               value.applies = value.applies.concat(basicAction);
               value.attributes = immutableAdd(
@@ -525,7 +524,7 @@ module Facet {
 
       if (this.mode === 'raw') {
         var attributes = this.attributes;
-        for (var attributeName in attributes) {
+        for (let attributeName in attributes) {
           if (!hasOwnProperty(attributes, attributeName)) continue;
           datum[attributeName] = getSampleValue(attributes[attributeName].type, null);
         }
@@ -535,8 +534,7 @@ module Facet {
         }
 
         var applies = this.applies;
-        for (var i = 0; i < applies.length; i++) {
-          var apply = applies[i];
+        for (let apply of applies) {
           datum[apply.name] = getSampleValue(apply.expression.type, apply.expression);
         }
       }
@@ -678,7 +676,7 @@ module Facet {
                 var breakdown = actionExpression.breakdownByDataset('_br_');
                 var singleDatasetActions = breakdown.singleDatasetActions;
                 newJoin = expression;
-                for (var i = 0; i < singleDatasetActions.length && newJoin; i++) {
+                for (let i = 0; i < singleDatasetActions.length && newJoin; i++) {
                   newJoin = this._joinDigestHelper(newJoin, singleDatasetActions[i]);
                 }
                 if (!newJoin) return null;

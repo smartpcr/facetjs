@@ -96,8 +96,7 @@ function deduplicateSort(a: string[]): string[] {
   a = a.sort();
   var newA: string[] = [];
   var last: string = null;
-  for (var i = 0; i < a.length; i++) {
-    var v = a[i];
+  for (let v of a) {
     if (v !== last) newA.push(v);
     last = v;
   }
@@ -106,11 +105,9 @@ function deduplicateSort(a: string[]): string[] {
 
 function multiMerge<T>(elements: T[], mergeFn: (a: T, b: T) => T): T[] {
   var newElements: T[] = [];
-  for (var i = 0; i < elements.length; i++) {
-    var accumulator = elements[i];
-    var tempElements: T[] = [];
-    for (var j = 0; j < newElements.length; j++) {
-      var newElement = newElements[j];
+  for (let accumulator of elements) {
+    let tempElements: T[] = [];
+    for (let newElement of newElements) {
       var mergeElement = mergeFn(accumulator, newElement);
       if (mergeElement) {
         accumulator = mergeElement;
@@ -162,8 +159,8 @@ module Facet {
   }
 
   export function find<T>(array: T[], fn: (value: T, index: int, array: T[]) => boolean): T {
-    for (var i = 0; i < array.length; i++) {
-      var a = array[i];
+    for (let i = 0, n = array.length; i < n; i++) {
+      let a = array[i];
       if (fn.call(array, a, i)) return a;
     }
     return null;

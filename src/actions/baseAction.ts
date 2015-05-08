@@ -28,8 +28,7 @@ module Facet {
   var checkAction: ImmutableClass<ActionValue, ActionJS>;
   export class Action implements ImmutableInstance<ActionValue, ActionJS> {
     static actionsDependOn(actions: Action[], name: string): boolean {
-      for (var i = 0; i < actions.length; i++) {
-        var action = actions[i];
+      for (let action of actions) {
         var freeReferences = action.getFreeReferences();
         if (freeReferences.indexOf(name) !== -1) return true;
         if ((<ApplyAction>action).name === name) return false;
@@ -118,7 +117,7 @@ module Facet {
       throw new Error('can not call this directly');
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return this.expression ? this.expression.expressionCount() : 0;
     }
 

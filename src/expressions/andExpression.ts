@@ -90,21 +90,20 @@ module Facet {
       var simpleOperands = this._getSimpleOperands();
 
       var groupedOperands: Lookup<Expression[]> = {};
-      for (var j = 0; j < simpleOperands.length; j++) {
-        var thisOperand = simpleOperands[j];
-        var referenceGroup = thisOperand.getFreeReferences().toString();
+      for (let simpleOperand of simpleOperands) {
+        var referenceGroup = simpleOperand.getFreeReferences().toString();
 
         if (hasOwnProperty(groupedOperands, referenceGroup)) {
-          groupedOperands[referenceGroup].push(thisOperand);
+          groupedOperands[referenceGroup].push(simpleOperand);
         } else {
-          groupedOperands[referenceGroup] = [thisOperand];
+          groupedOperands[referenceGroup] = [simpleOperand];
         }
       }
 
       var sortedReferenceGroups = Object.keys(groupedOperands).sort();
       var finalOperands: Expression[] = [];
-      for (var k = 0; k < sortedReferenceGroups.length; k++) {
-        var mergedExpressions = multiMerge(groupedOperands[sortedReferenceGroups[k]], (a, b) => {
+      for (let sortedReferenceGroup of sortedReferenceGroups) {
+        var mergedExpressions = multiMerge(groupedOperands[sortedReferenceGroup], (a, b) => {
           return a ? a.mergeAnd(b) : null;
         });
         if (mergedExpressions.length === 1) {
@@ -127,8 +126,7 @@ module Facet {
       var includedExpressions: Expression[] = [];
       var excludedExpressions: Expression[] = [];
       var operands = this.operands;
-      for (var i = 0; i < operands.length; i++) {
-        var operand = operands[i];
+      for (let operand of operands) {
         var sep = operand.separateViaAnd(refName);
         if (sep === null) return null;
         includedExpressions.push(sep.included);
@@ -136,8 +134,8 @@ module Facet {
       }
 
       return {
-        included: new AndExpression({op: 'and', operands: includedExpressions}).simplify(),
-        excluded: new AndExpression({op: 'and', operands: excludedExpressions}).simplify()
+        included: new AndExpression({ op: 'and', operands: includedExpressions }).simplify(),
+        excluded: new AndExpression({ op: 'and', operands: excludedExpressions }).simplify()
       };
     }
   }

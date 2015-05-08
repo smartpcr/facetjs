@@ -142,7 +142,7 @@ module Facet {
       return new AggregateExpression(value);
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1 + this.operand.expressionCount() + (this.attribute ? this.attribute.expressionCount() : 0);
     }
 
@@ -219,8 +219,7 @@ module Facet {
         var attributeOperands = attribute.operands;
         var literalSubExpression: Expression;
         var restOfOperands: Expression[] = [];
-        for (var i = 0; i < attributeOperands.length; i++) {
-          var attributeOperand = attributeOperands[i];
+        for (let attributeOperand of attributeOperands) {
           if (!literalSubExpression && attributeOperand.isOp('literal')) {
             literalSubExpression = attributeOperand;
           } else {

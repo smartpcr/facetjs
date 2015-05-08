@@ -216,9 +216,7 @@ module Facet {
     public apply(name: string, exFn: ComputeFn): NativeDataset {
       // Note this works in place, fix that later if needed.
       var data = this.data;
-      var n = data.length;
-      for (var i = 0; i < n; i++) {
-        var datum = data[i];
+      for (let datum of data) {
         datum[name] = exFn(datum);
       }
       this.attributes = null; // Since we did the change in place, blow out the attributes
@@ -241,9 +239,7 @@ module Facet {
     public def(name: string, exFn: ComputeFn): NativeDataset {
       // Note this works in place, fix that later if needed.
       var data = this.data;
-      var n = data.length;
-      for (var i = 0; i < n; i++) {
-        var datum = data[i];
+      for (let datum of data) {
         datum.$def = datum.$def || Object.create(null);
         datum.$def[name] = exFn(datum, true);
       }
@@ -281,9 +277,8 @@ module Facet {
     public sum(attrFn: ComputeFn): number {
       var sum = 0;
       var data = this.data;
-      var n = data.length;
-      for (var i = 0; i < n; i++) {
-        sum += attrFn(data[i])
+      for (let datum of data) {
+        sum += attrFn(datum);
       }
       return sum;
     }
@@ -291,9 +286,8 @@ module Facet {
     public min(attrFn: ComputeFn): number {
       var min = Infinity;
       var data = this.data;
-      var n = data.length;
-      for (var i = 0; i < n; i++) {
-        var v = attrFn(data[i]);
+      for (let datum of data) {
+        var v = attrFn(datum);
         if (v < min) min = v;
       }
       return min;
@@ -302,9 +296,8 @@ module Facet {
     public max(attrFn: ComputeFn): number {
       var max = Infinity;
       var data = this.data;
-      var n = data.length;
-      for (var i = 0; i < n; i++) {
-        var v = attrFn(data[i]);
+      for (let datum of data) {
+        var v = attrFn(datum);
         if (max < v) max = v;
       }
       return max;
@@ -313,9 +306,7 @@ module Facet {
     public group(attrFn: ComputeFn, attribute: Expression): Set {
       var splits: Lookup<any> = {};
       var data = this.data;
-      var n = data.length;
-      for (var i = 0; i < n; i++) {
-        var datum = data[i];
+      for (let datum of data) {
         var v: any = attrFn(datum);
         splits[v] = v;
       }
@@ -407,17 +398,16 @@ module Facet {
 
       var thisData = this.data;
       var otherData = other.data;
-      var datum: Datum;
       var k: string;
 
       var mapping: Lookup<Datum[]> = Object.create(null);
       for (var i = 0; i < thisData.length; i++) {
-        datum = thisData[i];
+        let datum = thisData[i];
         k = String(thisKey ? datum[thisKey] : i);
         mapping[k] = [datum];
       }
       for (var i = 0; i < otherData.length; i++) {
-        datum = otherData[i];
+        let datum = otherData[i];
         k = String(otherKey ? datum[otherKey] : i);
         if (!mapping[k]) mapping[k] = [];
         mapping[k].push(datum);
@@ -468,11 +458,9 @@ module Facet {
 
     private _flattenHelper(flattenedColumns: OrderedColumns, prefix: string, context: Datum, flat: Datum[]): void {
       var data = this.data;
-      for (var i = 0; i < data.length; i++) {
-        var datum = data[i];
+      for (let datum of data) {
         var flatDatum = copy(context);
-        for (var j = 0; j < flattenedColumns.length; j++) {
-          var flattenedColumn = flattenedColumns[j];
+        for (let flattenedColumn of flattenedColumns) {
           if (flattenedColumn.type === 'DATASET') {
             datum[flattenedColumn.name]._flattenHelper(
               flattenedColumn.columns,

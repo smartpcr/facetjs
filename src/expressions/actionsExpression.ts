@@ -43,11 +43,11 @@ module Facet {
       return true;
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       var expressionCount = super.expressionCount();
       var actions = this.actions;
-      for (var i = 0; i < actions.length; i++) {
-        expressionCount += actions[i].expressionCount();
+      for (let action of actions) {
+        expressionCount += action.expressionCount();
       }
       return expressionCount;
     }
@@ -63,8 +63,7 @@ module Facet {
 
         var dataset = operand.getFn()(null, def);
 
-        for (var i = 0; i < actions.length; i++) {
-          var action = actions[i];
+        for (let action of actions) {
           var actionExpression = action.expression;
 
           if (action instanceof FilterAction) {
@@ -157,8 +156,7 @@ module Facet {
     protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       var actions = this.actions;
       var every: boolean = true;
-      for (var i = 0; i < actions.length; i++) {
-        var action = actions[i];
+      for (let action of actions) {
         if (every) {
           every = action._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff + 1);
         } else {
@@ -201,8 +199,7 @@ module Facet {
       typeContext = this.operand._fillRefSubstitutions(typeContext, indexer, alterations);
 
       var actions = this.actions;
-      for (var i = 0; i < actions.length; i++) {
-        var action = actions[i];
+      for (let action of actions) {
         if (action instanceof DefAction || action instanceof ApplyAction) {
           typeContext.datasetType[action.name] = action.expression._fillRefSubstitutions(typeContext, indexer, alterations);
         } else if (action instanceof SortAction || action instanceof FilterAction) {

@@ -2,9 +2,7 @@ module Facet {
   export class BinaryExpression extends Expression {
     static jsToValue(parameters: ExpressionJS): ExpressionValue {
       var op = parameters.op;
-      var value: ExpressionValue = {
-        op: op
-      };
+      var value: ExpressionValue = { op };
       if (typeof parameters.lhs !== 'undefined' && parameters.lhs !== null) {
         value.lhs = Expression.fromJSLoose(parameters.lhs);
       } else {
@@ -49,7 +47,7 @@ module Facet {
         this.rhs.equals(other.rhs);
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1 + this.lhs.expressionCount() + this.rhs.expressionCount()
     }
 

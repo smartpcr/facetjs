@@ -2,11 +2,9 @@ module Facet {
   export class NaryExpression extends Expression {
     static jsToValue(parameters: ExpressionJS): ExpressionValue {
       var op = parameters.op;
-      var value: ExpressionValue = {
-        op: op
-      };
+      var value: ExpressionValue = { op };
       if (Array.isArray(parameters.operands)) {
-        value.operands = parameters.operands.map((operand) => Expression.fromJSLoose(operand));
+        value.operands = parameters.operands.map(operand => Expression.fromJSLoose(operand));
       } else {
         throw new TypeError("must have a operands");
       }
@@ -43,11 +41,11 @@ module Facet {
       return true;
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       var expressionCount = 1;
       var operands = this.operands;
-      for (var i = 0; i < operands.length; i++) {
-        expressionCount += operands[i].expressionCount();
+      for (let operand of operands) {
+        expressionCount += operand.expressionCount();
       }
       return expressionCount;
     }
