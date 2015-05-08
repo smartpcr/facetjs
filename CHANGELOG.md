@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.15.3
+
+* added support for uniques
+
 ## 0.15.2
 
 * better errors in SQL parser for the case of a multi-dimensional GROUP BY or ORDER BY
