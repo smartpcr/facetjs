@@ -1,5 +1,5 @@
 module Facet {
-  export var possibleTypes: Lookup<number> = {
+  export const POSSIBLE_TYPES: Lookup<number> = {
     'NULL': 1,
     'BOOLEAN': 1,
     'NUMBER': 1,
@@ -18,8 +18,8 @@ module Facet {
     'DATASET': 1
   };
 
-  var GENERATIONS_REGEXP = /^\^+/;
-  var TYPE_REGEXP = /:([A-Z\/_]+)$/;
+  const GENERATIONS_REGEXP = /^\^+/;
+  const TYPE_REGEXP = /:([A-Z\/_]+)$/;
 
   export class RefExpression extends Expression {
     static SIMPLE_NAME_REGEXP = /^([a-z_]\w*)$/i;
@@ -71,7 +71,7 @@ module Facet {
       return variableName
     }
 
-    public nest: number;
+    public nest: int;
     public name: string;
     public remote: string[];
 
@@ -96,7 +96,7 @@ module Facet {
 
       var myType = parameters.type;
       if (myType) {
-        if (!hasOwnProperty(possibleTypes, myType)) {
+        if (!hasOwnProperty(POSSIBLE_TYPES, myType)) {
           throw new TypeError(`unsupported type '${myType}'`);
         }
         this.type = myType;
@@ -236,7 +236,7 @@ module Facet {
       return myFullType;
     }
 
-    public incrementNesting(by: number = 1): RefExpression {
+    public incrementNesting(by: int = 1): RefExpression {
       var value = this.valueOf();
       value.nest = by + value.nest;
       return new RefExpression(value);

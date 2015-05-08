@@ -46,6 +46,7 @@
  */
 
 interface Lookup<T> { [key: string]: T }
+type int = number;
 interface Dummy {}
 
 interface DELETE_START {} // This is just a marker for the declaration post processor
@@ -87,7 +88,7 @@ function hasOwnProperty(obj: any, key: string): boolean {
   return objectHasOwnProperty.call(obj, key);
 }
 
-function repeat(str: string, times: number): string {
+function repeat(str: string, times: int): string {
   return new Array(times + 1).join(str);
 }
 
@@ -160,7 +161,7 @@ module Facet {
     }
   }
 
-  export function find<T>(array: T[], fn: (value: T, index: number, array: T[]) => boolean): T {
+  export function find<T>(array: T[], fn: (value: T, index: int, array: T[]) => boolean): T {
     for (var i = 0; i < array.length; i++) {
       var a = array[i];
       if (fn.call(array, a, i)) return a;

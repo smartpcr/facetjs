@@ -7,7 +7,7 @@ module Facet {
     name?: string;
     expression?: Expression;
     direction?: string;
-    limit?: number;
+    limit?: int;
   }
 
   export interface ActionJS {
@@ -15,7 +15,7 @@ module Facet {
     name?: string;
     expression?: ExpressionJS;
     direction?: string;
-    limit?: number;
+    limit?: int;
   }
 
   export interface ExpressionTransformation {
@@ -62,38 +62,6 @@ module Facet {
       }
 
       return ClassFn.fromJS(actionJS);
-    }
-
-    static getPrecedenceOrder(action: Action) {
-      var orders = [FilterAction, SortAction, LimitAction, DefAction, ApplyAction];
-
-      for (var i = 0; i < orders.length; i++) {
-        if (action instanceof orders[i]) return i;
-      }
-      return orders.length;
-    }
-
-    static compare(a: Action, b: Action): number {
-      if (Action.getPrecedenceOrder(a) > Action.getPrecedenceOrder(b)) {
-        return 1;
-      } else if (Action.getPrecedenceOrder(a) < Action.getPrecedenceOrder(b)) {
-        return -1;
-      }
-
-      var aReferences = a.expression.getFreeReferences();
-      var bReferences = b.expression.getFreeReferences();
-
-      if (aReferences.length < bReferences.length) {
-        return -1;
-      } else if (aReferences.length > bReferences.length) {
-        return 1;
-      } else {
-        if (bReferences.toString() !== aReferences.toString()) {
-          return aReferences.toString().localeCompare(bReferences.toString());
-        }
-
-        return (<DefAction>a).name.localeCompare((<DefAction>b).name);
-      }
     }
 
     public action: string;
@@ -165,7 +133,7 @@ module Facet {
       return this.expression ? this.expression.getFreeReferences() : [];
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       return this.expression ? this.expression._everyHelper(iter, thisArg, indexer, depth, nestDiff) : true;
     }
 
@@ -181,7 +149,7 @@ module Facet {
       return this._substituteHelper(substitutionFn, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Action {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Action {
       if (!this.expression) return this;
       var subExpression = this.expression._substituteHelper(substitutionFn, thisArg, indexer, depth, nestDiff);
       if (this.expression === subExpression) return this;

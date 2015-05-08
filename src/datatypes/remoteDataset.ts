@@ -334,7 +334,7 @@ module Facet {
       var actions: Action[] = [];
       var namesUsed: string[] = [];
 
-      var newExpression = apply.expression.substitute((ex: Expression, index: number) => {
+      var newExpression = apply.expression.substitute((ex: Expression, index: int) => {
         if (ex instanceof AggregateExpression) {
           var existingAction = this.getExistingActionForExpression(ex);
           if (index === 0) {

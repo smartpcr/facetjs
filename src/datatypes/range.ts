@@ -1,5 +1,5 @@
 module Facet {
-  var BOUNDS_REG_EXP = /^[\[(][\])]$/;
+  const BOUNDS_REG_EXP = /^[\[(][\])]$/;
 
   export class Range<T> {
     static DEFAULT_BOUNDS = '[)';

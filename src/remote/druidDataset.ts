@@ -1,7 +1,7 @@
 module Facet {
-  var DUMMY_NAME = '!DUMMY';
+  const DUMMY_NAME = '!DUMMY';
 
-  var timePartToFormat: Lookup<string> = {
+  const TIME_PART_TO_FORMAT: Lookup<string> = {
     SECOND_OF_MINUTE: "s",
     SECOND_OF_HOUR: "m'*60+'s",
     SECOND_OF_DAY: "H'*60+'m'*60+'s",
@@ -28,7 +28,7 @@ module Facet {
     WEEK_OF_YEAR: "w"
   };
 
-  function simpleMath(exprStr: string): number {
+  function simpleMath(exprStr: string): int {
     if (String(exprStr) === 'null') return null;
     var parts = exprStr.split(/(?=[*+])/);
     var acc = parseInt(parts.shift(), 10);
@@ -138,7 +138,7 @@ module Facet {
       var canonicalDurationLengthAndThenSome = duration.getCanonicalLength() * 1.5;
       return new NativeDataset({
         source: 'native',
-        data: res.map((d: any, i: number) => {
+        data: res.map((d: any, i: int) => {
           var rangeStart = new Date(d.timestamp);
           var next = res[i + 1];
           var nextTimestamp: Date;
@@ -671,7 +671,7 @@ return (start < 0 ?'-':'') + parts.join('.');
         var refExpression = splitExpression.operand;
         if (refExpression instanceof RefExpression) {
           queryType = 'topN';
-          var format = timePartToFormat[splitExpression.part];
+          var format = TIME_PART_TO_FORMAT[splitExpression.part];
           if (!format) throw new Error(`unsupported part in timePart expression ${splitExpression.part}`);
           dimension = {
             type: "extraction",

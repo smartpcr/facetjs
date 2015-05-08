@@ -1,14 +1,14 @@
 module Facet {
   export interface SubstitutionFn {
-    (ex: Expression, index?: number, depth?: number, nestDiff?: number): Expression;
+    (ex: Expression, index?: int, depth?: int, nestDiff?: int): Expression;
   }
 
   export interface BooleanExpressionIterator {
-    (ex: Expression, index?: number, depth?: number, nestDiff?: number): boolean;
+    (ex: Expression, index?: int, depth?: int, nestDiff?: int): boolean;
   }
 
   export interface VoidExpressionIterator {
-    (ex: Expression, index?: number, depth?: number, nestDiff?: number): void;
+    (ex: Expression, index?: int, depth?: int, nestDiff?: int): void;
   }
 
   export interface DatasetBreakdown {
@@ -22,7 +22,7 @@ module Facet {
   }
 
   export interface Indexer {
-    index: number
+    index: int
   }
 
   export type Alterations = Lookup<Expression>;
@@ -49,9 +49,9 @@ module Facet {
     duration?: Duration;
     timezone?: Timezone;
     part?: string;
-    position?: number;
-    length?: number;
-    nest?: number;
+    position?: int;
+    length?: int;
+    nest?: int;
   }
 
   export interface ExpressionJS {
@@ -74,9 +74,9 @@ module Facet {
     duration?: string;
     timezone?: string;
     part?: string;
-    position?: number;
-    length?: number;
-    nest?: number;
+    position?: int;
+    length?: int;
+    nest?: int;
   }
 
   export interface Separation {
@@ -405,7 +405,7 @@ module Facet {
      */
     public getFreeReferences(): string[] {
       var freeReferences: string[] = [];
-      this.forEach((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      this.forEach((ex: Expression, index: int, depth: int, nestDiff: int) => {
         if (ex instanceof RefExpression && nestDiff <= ex.nest) {
           freeReferences.push(repeat('^', ex.nest - nestDiff) + ex.name);
         }
@@ -420,7 +420,7 @@ module Facet {
      */
     public getFreeReferenceIndexes(): number[] {
       var freeReferenceIndexes: number[] = [];
-      this.forEach((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      this.forEach((ex: Expression, index: int, depth: int, nestDiff: int) => {
         if (ex instanceof RefExpression && nestDiff <= ex.nest) {
           freeReferenceIndexes.push(index);
         }
@@ -434,10 +434,10 @@ module Facet {
      * @param by The number of generation to increment by (default: 1)
      * @returns {any}
      */
-    public incrementNesting(by: number = 1): Expression {
+    public incrementNesting(by: int = 1): Expression {
       var freeReferenceIndexes = this.getFreeReferenceIndexes();
       if (freeReferenceIndexes.length === 0) return this;
-      return this.substitute((ex: Expression, index: number) => {
+      return this.substitute((ex: Expression, index: int) => {
         if (ex instanceof RefExpression && freeReferenceIndexes.indexOf(index) !== -1) {
           return ex.incrementNesting(by);
         }
@@ -484,7 +484,7 @@ module Facet {
       return this._everyHelper(iter, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       return iter.call(thisArg, this, indexer.index, depth, nestDiff) !== false;
     }
 
@@ -496,7 +496,7 @@ module Facet {
      * @returns {boolean}
      */
     public some(iter: BooleanExpressionIterator, thisArg?: any): boolean {
-      return !this.every((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      return !this.every((ex: Expression, index: int, depth: int, nestDiff: int) => {
         var v = iter.call(this, ex, index, depth, nestDiff);
         return (v == null) ? null : !v;
       }, thisArg);
@@ -510,7 +510,7 @@ module Facet {
      * @returns {boolean}
      */
     public forEach(iter: VoidExpressionIterator, thisArg?: any): void {
-      this.every((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      this.every((ex: Expression, index: int, depth: int, nestDiff: int) => {
         iter.call(this, ex, index, depth, nestDiff);
         return null;
       }, thisArg);
@@ -527,7 +527,7 @@ module Facet {
       return this._substituteHelper(substitutionFn, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
@@ -673,7 +673,7 @@ module Facet {
       return this.performAction(new SortAction({ expression: ex, direction: direction }));
     }
 
-    public limit(limit: number): Expression {
+    public limit(limit: int): Expression {
       return this.performAction(new LimitAction({ limit: limit }));
     }
 
@@ -860,7 +860,7 @@ module Facet {
       var alterations: Alterations = {};
       this._fillRefSubstitutions(typeContext, { index: 0 }, alterations); // This return the final type
       if (!Object.keys(alterations).length) return this;
-      return this.substitute((ex: Expression, index: number): Expression => alterations[index] || null);
+      return this.substitute((ex: Expression, index: int): Expression => alterations[index] || null);
     }
 
     /**
@@ -871,7 +871,7 @@ module Facet {
      * @return The resolved expression
      */
     public resolve(context: Datum, leaveIfNotFound: boolean = false): Expression {
-      return this.substitute((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      return this.substitute((ex: Expression, index: int, depth: int, nestDiff: int) => {
         if (ex instanceof RefExpression) {
           var refGen = ex.nest;
           if (nestDiff === refGen) {
