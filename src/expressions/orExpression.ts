@@ -12,7 +12,7 @@ module Facet {
     }
 
     public toString(): string {
-      return '(' + this.operands.map((operand) => operand.toString()).join(' or ') + ')';
+      return '(' + this.operands.map(operand => operand.toString()).join(' or ') + ')';
     }
 
     protected _getFnHelper(operandFns: ComputeFn[]): ComputeFn {

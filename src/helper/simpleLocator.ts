@@ -15,7 +15,7 @@ module Facet {
       var defaultPort: number = parameters.defaultPort;
       if (!resource) throw new Error("must have resource");
 
-      var locations = resource.split(";").map((locationString) => {
+      var locations = resource.split(";").map(locationString => {
         var parts = locationString.split(":");
         if (parts.length > 2) throw new Error("invalid resource part '" + locationString + "'");
 

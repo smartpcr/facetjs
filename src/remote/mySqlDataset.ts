@@ -149,7 +149,7 @@ module Facet {
           break;
 
         case 'total':
-          query.push(this.applies.map((apply) => apply.getSQL(mySQLDialect)).join(',\n'));
+          query.push(this.applies.map(apply => apply.getSQL(mySQLDialect)).join(',\n'));
           query.push('FROM ' + table);
           if (!(this.filter.equals(Expression.TRUE))) {
             query.push('WHERE ' + this.filter.getSQL(mySQLDialect));
@@ -160,7 +160,7 @@ module Facet {
         case 'split':
           query.push(
             [`${this.split.getSQL(mySQLDialect)} AS '${this.key}'`]
-              .concat(this.applies.map((apply) => apply.getSQL(mySQLDialect))).join(',\n')
+              .concat(this.applies.map(apply => apply.getSQL(mySQLDialect))).join(',\n')
           );
           query.push('FROM ' + table);
           if (!(this.filter.equals(Expression.TRUE))) {

@@ -56,7 +56,7 @@ module Facet {
     }
 
     public toString(): string {
-      return '(' + this.operands.map((operand) => operand.toString()).join(' and ') + ')';
+      return '(' + this.operands.map(operand => operand.toString()).join(' and ') + ')';
     }
 
     protected _getFnHelper(operandFns: ComputeFn[]): ComputeFn {

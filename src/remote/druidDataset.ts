@@ -217,7 +217,7 @@ module Facet {
     }
     return new NativeDataset({
       source: 'native',
-      data: res.map((r) => {
+      data: res.map(r => {
         var datum = r.event;
         cleanDatumInPlace(datum);
         return datum;
@@ -233,7 +233,7 @@ module Facet {
     }
     return new NativeDataset({
       source: 'native',
-      data: res[0].result.events.map((event) => event.event)
+      data: res[0].result.events.map(event => event.event)
     });
   }
 
@@ -241,10 +241,10 @@ module Facet {
     return (res: Druid.DatasourceIntrospectResult): Lookup<AttributeInfo> => {
       var attributes: Lookup<AttributeInfo> = Object.create(null);
       attributes[timeAttribute] = new AttributeInfo({ type: 'TIME' });
-      res.dimensions.forEach((dimension) => {
+      res.dimensions.forEach(dimension => {
         attributes[dimension] = new AttributeInfo({ type: 'STRING' });
       });
-      res.metrics.forEach((metric) => {
+      res.metrics.forEach(metric => {
         attributes[metric] = new AttributeInfo({ type: 'NUMBER', filterable: false, splitable: false });
       });
       return attributes;
@@ -399,7 +399,7 @@ module Facet {
     public canUseNativeAggregateFilter(filterExpression: Expression): boolean {
       if (filterExpression.type !== 'BOOLEAN') throw new Error("must be a BOOLEAN filter");
 
-      return filterExpression.every((ex) => {
+      return filterExpression.every(ex => {
         if (ex instanceof IsExpression) {
           return ex.lhs.isOp('ref') && ex.rhs.isOp('literal')
         } else if (ex instanceof InExpression) {
@@ -539,7 +539,7 @@ module Facet {
             throw new Error("not supported " + rhsType + " for time filtering");
           }
 
-          return timeRanges.map((timeRange) => timeRange.toInterval());
+          return timeRanges.map(timeRange => timeRange.toInterval());
         } else {
           throw new Error("can not convert " + filter.toString() + " to Druid interval");
         }
@@ -788,7 +788,7 @@ return (start < 0 ?'-':'') + parts.join('.');
         return {
           type: 'arithmetic',
           fn: fn,
-          fields: operands.map((operand) => {
+          fields: operands.map(operand => {
             return this.expressionToPostAggregation(operand, aggregations);
           }, this)
         };
@@ -831,8 +831,8 @@ return (start < 0 ?'-':'') + parts.join('.');
           opposite = 'reciprocate';
           zero = 1;
         }
-        var additive = ex.operands.filter((o) => o.op !== opposite);
-        var subtractive = ex.operands.filter((o) => o.op === opposite);
+        var additive = ex.operands.filter(o => o.op !== opposite);
+        var subtractive = ex.operands.filter(o => o.op === opposite);
         if (!additive.length) additive.push(new LiteralExpression({ op: 'literal', value: zero }));
 
         if (subtractive.length) {
@@ -841,7 +841,7 @@ return (start < 0 ?'-':'') + parts.join('.');
             fn: antiFn,
             fields: [
               this.operandsToArithmetic(additive, fn, aggregations),
-              this.operandsToArithmetic(subtractive.map((op) => (<UnaryExpression>op).operand), fn, aggregations)
+              this.operandsToArithmetic(subtractive.map(op => (<UnaryExpression>op).operand), fn, aggregations)
             ]
           };
         } else {
@@ -952,7 +952,7 @@ return (start < 0 ?'-':'') + parts.join('.');
     }
 
     public processApply(apply: ApplyAction): Action[] {
-      return this.separateAggregates(<ApplyAction>apply.applyToExpression((ex) => {
+      return this.separateAggregates(<ApplyAction>apply.applyToExpression(ex => {
         return this.inlineDerivedAttributes(ex).decomposeAverage().distributeAggregates();
       }), true);
     }
@@ -961,13 +961,13 @@ return (start < 0 ?'-':'') + parts.join('.');
       var aggregations: Druid.Aggregation[] = [];
       var postAggregations: Druid.PostAggregation[] = [];
 
-      this.defs.forEach((action) => {
+      this.defs.forEach(action => {
         if (action.expression instanceof AggregateExpression) {
           aggregations.push(this.actionToAggregation(action));
         }
       });
 
-      this.applies.forEach((action) => {
+      this.applies.forEach(action => {
         if (action.expression instanceof AggregateExpression) {
           aggregations.push(this.actionToAggregation(action));
         } else {

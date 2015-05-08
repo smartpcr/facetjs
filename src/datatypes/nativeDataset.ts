@@ -227,7 +227,7 @@ module Facet {
       // Note this works in place, fix that later if needed.
       var ds = this;
       var promises = this.data.map(exFn);
-      return Q.all(promises).then((values) => {
+      return Q.all(promises).then(values => {
         var data = ds.data;
         var n = data.length;
         for (var i = 0; i < n; i++) data[i][name] = values[i];
@@ -250,7 +250,7 @@ module Facet {
     public filter(exFn: ComputeFn): NativeDataset {
       return new NativeDataset({
         source: 'native',
-        data: this.data.filter((datum) => exFn(datum))
+        data: this.data.filter(datum => exFn(datum))
       })
     }
 
@@ -312,7 +312,7 @@ module Facet {
       }
       return Set.fromJS({
         setType: attribute.type,
-        elements: Object.keys(splits).map((k) => splits[k])
+        elements: Object.keys(splits).map(k => splits[k])
       });
     }
 
@@ -328,12 +328,12 @@ module Facet {
       var datum = data[0];
 
       var attributes: Lookup<AttributeInfo> = {};
-      Object.keys(datum).forEach((applyName) => {
+      Object.keys(datum).forEach(applyName => {
         var applyValue = datum[applyName];
         if (applyName !== '$def') {
           attributes[applyName] = getAttributeInfo(applyValue);
         } else {
-          Object.keys(applyValue).forEach((defName) => {
+          Object.keys(applyValue).forEach(defName => {
             var defValue = applyValue[defName];
             attributes[defName] = getAttributeInfo(defValue);
           })
@@ -351,14 +351,14 @@ module Facet {
       if (this.data.length === 0) return [];
       var datum = this.data[0];
       var remoteDatasets: RemoteDataset[][] = [];
-      Object.keys(datum).forEach((applyName) => {
+      Object.keys(datum).forEach(applyName => {
         var applyValue = datum[applyName];
         if (applyName !== '$def') {
           if (applyValue instanceof Dataset) {
             remoteDatasets.push(applyValue.getRemoteDatasets());
           }
         } else {
-          Object.keys(applyValue).forEach((defName) => {
+          Object.keys(applyValue).forEach(defName => {
             var defValue = applyValue[defName];
             if (defValue instanceof Dataset) {
               remoteDatasets.push(defValue.getRemoteDatasets());
@@ -374,14 +374,14 @@ module Facet {
       var datum = this.data[0];
       var push = Array.prototype.push;
       var remoteDatasetIds: string[] = [];
-      Object.keys(datum).forEach((applyName) => {
+      Object.keys(datum).forEach(applyName => {
         var applyValue = datum[applyName];
         if (applyName !== '$def') {
           if (applyValue instanceof Dataset) {
             push.apply(remoteDatasetIds, applyValue.getRemoteDatasets());
           }
         } else {
-          Object.keys(applyValue).forEach((defName) => {
+          Object.keys(applyValue).forEach(defName => {
             var defValue = applyValue[defName];
             if (defValue instanceof Dataset) {
               push.apply(remoteDatasetIds, defValue.getRemoteDatasets());
@@ -516,11 +516,11 @@ module Facet {
       var data = flatData.data;
 
       var lines: string[] = [];
-      lines.push(columns.map((c) => c.name).join(tabulatorOptions.separator || ','));
+      lines.push(columns.map(c => c.name).join(tabulatorOptions.separator || ','));
 
       for (var i = 0; i < data.length; i++) {
         var datum = data[i];
-        lines.push(columns.map((c) => {
+        lines.push(columns.map(c => {
           return String((formatter[c.type] || defaultFormatter[c.type])(datum[c.name]));
         }).join(tabulatorOptions.separator || ','));
       }

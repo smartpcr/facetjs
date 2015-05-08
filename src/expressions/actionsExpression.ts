@@ -24,12 +24,12 @@ module Facet {
 
     public toJS(): ExpressionJS {
       var js = super.toJS();
-      js.actions = this.actions.map((action) => action.toJS());
+      js.actions = this.actions.map(action => action.toJS());
       return js;
     }
 
     public toString(): string {
-      return this.operand.toString() + this.actions.map((action) => action.toString()).join('\n  ');
+      return this.operand.toString() + this.actions.map(action => action.toString()).join('\n  ');
     }
 
     public equals(other: ActionsExpression): boolean {
@@ -100,7 +100,7 @@ module Facet {
       if (this.simple) return this;
 
       var simpleOperand = this.operand.simplify();
-      var simpleActions = this.actions.map((action) => action.simplify()); //this._getSimpleActions();
+      var simpleActions = this.actions.map(action => action.simplify()); //this._getSimpleActions();
 
       function isRemoteSimpleApply(action: Action): boolean {
         return action instanceof ApplyAction && action.expression.hasRemote() && action.expression.type !== 'DATASET';
@@ -138,7 +138,7 @@ module Facet {
         }
         if (simpleOperand !== digestedOperand) {
           simpleOperand = digestedOperand;
-          var defsToAddBack: Action[] = absorbedDefs.filter((def) => {
+          var defsToAddBack: Action[] = absorbedDefs.filter(def => {
             return Action.actionsDependOn(undigestedActions, def.name);
           });
           simpleActions = defsToAddBack.concat(undigestedActions);
@@ -176,7 +176,7 @@ module Facet {
       }
 
       var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff);
-      var subActions = this.actions.map((action) => action._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff + 1));
+      var subActions = this.actions.map(action => action._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff + 1));
       if (this.operand === subOperand && arraysEqual(this.actions, subActions)) return this;
 
       var value = this.valueOf();

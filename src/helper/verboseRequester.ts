@@ -39,7 +39,7 @@ module Facet {
         preQuery(request.query);
         var startTime = Date.now();
         return requester(request)
-          .then((data) => {
+          .then(data => {
             onSuccess(data, Date.now() - startTime, request.query);
             return data;
           }, (error) => {

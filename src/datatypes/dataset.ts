@@ -39,14 +39,14 @@ module Facet {
 
   export function mergeRemoteDatasets(remoteGroups: RemoteDataset[][]): RemoteDataset[] {
     var seen: Lookup<RemoteDataset> = {};
-    remoteGroups.forEach((remoteGroup) => {
-      remoteGroup.forEach((remote) => {
+    remoteGroups.forEach(remoteGroup => {
+      remoteGroup.forEach(remote => {
         var id = remote.getId();
         if (seen[id]) return;
         seen[id] = remote;
       })
     });
-    return Object.keys(seen).sort().map((k) => seen[k]);
+    return Object.keys(seen).sort().map(k => seen[k]);
   }
 
 // =====================================================================================

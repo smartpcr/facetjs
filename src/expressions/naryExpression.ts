@@ -27,7 +27,7 @@ module Facet {
 
     public toJS(): ExpressionJS {
       var js = super.toJS();
-      js.operands = this.operands.map((operand) => operand.toJS());
+      js.operands = this.operands.map(operand => operand.toJS());
       return js;
     }
 
@@ -110,11 +110,11 @@ module Facet {
       var special = this._specialSimplify(simpleOperands);
       if (special) return special;
 
-      var literalOperands = simpleOperands.filter((operand) => operand.isOp('literal')); // ToDo: add hasRemote and better call
-      var nonLiteralOperands = simpleOperands.filter((operand) => !operand.isOp('literal'));
+      var literalOperands = simpleOperands.filter(operand => operand.isOp('literal')); // ToDo: add hasRemote and better call
+      var nonLiteralOperands = simpleOperands.filter(operand => !operand.isOp('literal'));
       var literalExpression = new LiteralExpression({
         op: 'literal',
-        value: this._getFnHelper(literalOperands.map((operand) => operand.getFn()))(null)
+        value: this._getFnHelper(literalOperands.map(operand => operand.getFn()))(null)
       });
 
       if (nonLiteralOperands.length) {
@@ -133,7 +133,7 @@ module Facet {
         indexer.index++;
       }
 
-      return this.operands.every((operand) => operand._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff));
+      return this.operands.every(operand => operand._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff));
     }
 
     public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
@@ -145,7 +145,7 @@ module Facet {
         indexer.index++;
       }
 
-      var subOperands = this.operands.map((operand) => operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff));
+      var subOperands = this.operands.map(operand => operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff));
       if (this.operands.every((op, i) => op === subOperands[i])) return this;
 
       var value = this.valueOf();
@@ -159,7 +159,7 @@ module Facet {
     }
 
     public getFn(): ComputeFn {
-      return this._getFnHelper(this.operands.map((operand) => operand.getFn()));
+      return this._getFnHelper(this.operands.map(operand => operand.getFn()));
     }
 
     protected _getJSExpressionHelper(operandJSExpressions: string[]): string {
@@ -167,7 +167,7 @@ module Facet {
     }
 
     public getJSExpression(datumVar: string): string {
-      return this._getJSExpressionHelper(this.operands.map((operand) => operand.getJSExpression(datumVar)));
+      return this._getJSExpressionHelper(this.operands.map(operand => operand.getJSExpression(datumVar)));
     }
 
     protected _getSQLHelper(operandSQLs: string[], dialect: SQLDialect, minimal: boolean): string {
@@ -175,7 +175,7 @@ module Facet {
     }
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
-      return this._getSQLHelper(this.operands.map((operand) => operand.getSQL(dialect, minimal)), dialect, minimal);
+      return this._getSQLHelper(this.operands.map(operand => operand.getSQL(dialect, minimal)), dialect, minimal);
     }
 
     protected _checkTypeOfOperands(wantedType: string): void {
@@ -189,7 +189,7 @@ module Facet {
 
     public _fillRefSubstitutions(typeContext: FullType, indexer: Indexer, alterations: Alterations): FullType {
       indexer.index++;
-      var remotes = this.operands.map((operand) => operand._fillRefSubstitutions(typeContext, indexer, alterations).remote);
+      var remotes = this.operands.map(operand => operand._fillRefSubstitutions(typeContext, indexer, alterations).remote);
       return {
         type: this.type,
         remote: mergeRemotes(remotes)

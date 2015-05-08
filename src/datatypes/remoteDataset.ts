@@ -393,9 +393,9 @@ module Facet {
 
     public inlineDerivedAttributes(expression: Expression): Expression {
       var derivedAttributes = this.derivedAttributes;
-      return expression.substitute((ex) => {
+      return expression.substitute(ex => {
         if (ex instanceof AggregateExpression) {
-          return ex.substitute((refEx) => {
+          return ex.substitute(refEx => {
             if (refEx instanceof RefExpression) {
               var refName = refEx.name;
               return hasOwnProperty(derivedAttributes, refName) ? derivedAttributes[refName] : null;

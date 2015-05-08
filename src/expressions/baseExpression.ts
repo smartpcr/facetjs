@@ -582,7 +582,7 @@ module Facet {
         throw new Error('not a multiple dataset expression');
       }
 
-      var combine = this.substitute((ex) => {
+      var combine = this.substitute(ex => {
         var remoteDatasets = ex.getRemoteDatasetIds();
         if (remoteDatasets.length !== 1) return null;
 
@@ -912,7 +912,7 @@ module Facet {
      * Decompose instances of $data.average($x) into $data.sum($x) / $data.count()
      */
     public decomposeAverage(): Expression {
-      return this.substitute((ex) => {
+      return this.substitute(ex => {
         return ex.isOp('aggregate') ? ex.decomposeAverage() : null;
       })
     }
@@ -922,7 +922,7 @@ module Facet {
      * Turns $data.sum($x - 2 * $y) into $data.sum($x) - 2 * $data.sum($y)
      */
     public distributeAggregates(): Expression {
-      return this.substitute((ex) => {
+      return this.substitute(ex => {
         return ex.isOp('aggregate') ? ex.distributeAggregates() : null;
       })
     }
@@ -961,7 +961,7 @@ module Facet {
         return Q(this.computeNative(context));
       }
       var ex = this;
-      return introspectDatum(context).then((introspectedContext) => {
+      return introspectDatum(context).then(introspectedContext => {
         return ex.referenceCheck(introspectedContext).resolve(introspectedContext).simplify()._computeResolved();
       });
     }

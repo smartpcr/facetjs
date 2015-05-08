@@ -209,7 +209,7 @@ module Facet {
       } else if (attribute instanceof AddExpression) {
         return new AddExpression({
           op: 'add',
-          operands: attribute.operands.map((attributeOperand) => operand.sum(attributeOperand).distributeAggregates())
+          operands: attribute.operands.map(attributeOperand => operand.sum(attributeOperand).distributeAggregates())
         });
 
       } else if (attribute instanceof NegateExpression) {

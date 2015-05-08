@@ -24,7 +24,7 @@ module Facet {
   }
 
   function hashToValues(hash: Lookup<any>): Array<any> {
-    return Object.keys(hash).sort().map((k) => hash[k]);
+    return Object.keys(hash).sort().map(k => hash[k]);
   }
 
   function unifyElements(elements: Lookup<Range<any>>): Lookup<Range<any>> {
@@ -334,7 +334,7 @@ module Facet {
       return new NativeDataset({
         source: 'native',
         key: name,
-        data: this.getElements().map((v) => {
+        data: this.getElements().map(v => {
           var datum: Datum = {};
           datum[name] = v;
           return datum
