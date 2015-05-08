@@ -5,7 +5,7 @@ module Facet {
     average: 'AVG(',
     min: 'MIN(',
     max: 'MAX(',
-    uniqueCount: 'COUNT(DISTINCT '
+    countDistinct: 'COUNT(DISTINCT '
   };
 
   export class AggregateExpression extends UnaryExpression {

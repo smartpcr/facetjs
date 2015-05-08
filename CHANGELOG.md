@@ -1,8 +1,26 @@
 # Change Log
 
+## 0.15.2
+
+* better errors in SQL parser for the case of a multi-dimensional GROUP BY or ORDER BY
+
+## 0.15.1
+
+* started fSQL docs
+* in ref expression renamed `generations` -> `nest`
+* allow facet variables with fancy names like `${I blame your mother!}`
+
+## 0.14.8
+
+* average decomposition it is now possible to do: `$data.average($y)` => `$data.sum($y) / $data.count()`
+
+## 0.14.7
+
+* distribute over constant multiplication `$data.sum(2 * $y)` => `2 * $data.sum($y)`
+
 ## 0.14.6
 
-* added ability for distributively transforming aggregates: $data.sum($x + $y) => $data.sum($x) + $data.sum($y)
+* added ability for distributively transforming aggregates: `$data.sum($x + $y)` => `$data.sum($x) + $data.sum($y)`
 
 ## 0.14.5
 

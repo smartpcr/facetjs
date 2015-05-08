@@ -266,15 +266,17 @@ BasicExpression
 
 
 AggregateExpression
-  = CountToken "()"
+  = CountToken "(" _ (StarToken / Expression)? _ ")"
     { return dataRef.count(); }
+  / CountToken "(" _ DistinctToken _ ex:Expression _ ")"
+    { return dataRef.countDistinct(ex); }
   / fn:AggregateFn "(" _ ex:Expression _ ")"
     { return dataRef[fn](ex); }
   / QuantileToken "(" _ ex:Expression _ "," _ value: Number ")"
     { return dataRef.quantile(ex, value); }
 
 AggregateFn
-  = SumToken / AvgToken / MinToken / MaxToken
+  = SumToken / AvgToken / MinToken / MaxToken / CountDistinctToken
 
 
 FunctionCallExpression
@@ -326,50 +328,54 @@ String "String"
 
 /* Tokens */
 
-NullToken         = "NULL"i          !IdentifierPart { return null; }
-TrueToken         = "TRUE"i          !IdentifierPart { return true; }
-FalseToken        = "FALSE"i         !IdentifierPart { return false; }
+NullToken          = "NULL"i           !IdentifierPart { return null; }
+TrueToken          = "TRUE"i           !IdentifierPart { return true; }
+FalseToken         = "FALSE"i          !IdentifierPart { return false; }
 
-SelectToken       = "SELECT"i        !IdentifierPart
-FromToken         = "FROM"i          !IdentifierPart
-AsToken           = "AS"i            !IdentifierPart
-OnToken           = "ON"i            !IdentifierPart
-LeftToken         = "LEFT"i          !IdentifierPart
-InnerToken        = "INNER"i         !IdentifierPart
-JoinToken         = "JOIN"i          !IdentifierPart
-UnionToken        = "UNION"i         !IdentifierPart
-WhereToken        = "WHERE"i         !IdentifierPart
-GroupToken        = "GROUP"i         !IdentifierPart
-ByToken           = "BY"i            !IdentifierPart
-OrderToken        = "ORDER"i         !IdentifierPart
-HavingToken       = "HAVING"i        !IdentifierPart
-LimitToken        = "LIMIT"i         !IdentifierPart
+SelectToken        = "SELECT"i         !IdentifierPart
+FromToken          = "FROM"i           !IdentifierPart
+AsToken            = "AS"i             !IdentifierPart
+OnToken            = "ON"i             !IdentifierPart
+LeftToken          = "LEFT"i           !IdentifierPart
+InnerToken         = "INNER"i          !IdentifierPart
+JoinToken          = "JOIN"i           !IdentifierPart
+UnionToken         = "UNION"i          !IdentifierPart
+WhereToken         = "WHERE"i          !IdentifierPart
+GroupToken         = "GROUP"i          !IdentifierPart
+ByToken            = "BY"i             !IdentifierPart
+OrderToken         = "ORDER"i          !IdentifierPart
+HavingToken        = "HAVING"i         !IdentifierPart
+LimitToken         = "LIMIT"i          !IdentifierPart
 
-AscToken          = "ASC"i           !IdentifierPart { return 'ascending';  }
-DescToken         = "DESC"i          !IdentifierPart { return 'descending'; }
+AscToken           = "ASC"i            !IdentifierPart { return 'ascending';  }
+DescToken          = "DESC"i           !IdentifierPart { return 'descending'; }
 
-BetweenToken      = "BETWEEN"i       !IdentifierPart
-InToken           = "IN"i            !IdentifierPart
-IsToken           = "IS"i            !IdentifierPart
-LikeToken         = "LIKE"i          !IdentifierPart
-ContainsToken     = "CONTAINS"i      !IdentifierPart
+BetweenToken       = "BETWEEN"i        !IdentifierPart
+InToken            = "IN"i             !IdentifierPart
+IsToken            = "IS"i             !IdentifierPart
+LikeToken          = "LIKE"i           !IdentifierPart
+ContainsToken      = "CONTAINS"i       !IdentifierPart
 
-NotToken          = "NOT"i           !IdentifierPart
-AndToken          = "AND"i           !IdentifierPart
-OrToken           = "OR"i            !IdentifierPart
+NotToken           = "NOT"i            !IdentifierPart
+AndToken           = "AND"i            !IdentifierPart
+OrToken            = "OR"i             !IdentifierPart
 
-CountToken        = "COUNT"i         !IdentifierPart { return 'count'; }
-SumToken          = "SUM"i           !IdentifierPart { return 'sum'; }
-AvgToken          = "AVG"i           !IdentifierPart { return 'average'; }
-MinToken          = "MIN"i           !IdentifierPart { return 'min'; }
-MaxToken          = "MAX"i           !IdentifierPart { return 'max'; }
-QuantileToken     = "QUANTILE"i      !IdentifierPart { return 'quantile'; }
+DistinctToken      = "DISTINCT"i       !IdentifierPart
+StarToken          = "*"               !IdentifierPart
 
-TimeBucketToken   = "TIME_BUCKET"i   !IdentifierPart
-NumberBucketToken = "NUMBER_BUCKET"i !IdentifierPart
-TimePartToken     = "TIME_PART"i     !IdentifierPart
-SubstrToken       = "SUBSTR"i        !IdentifierPart
-ConcatToken       = "CONCAT"i        !IdentifierPart
+CountToken         = "COUNT"i          !IdentifierPart { return 'count'; }
+CountDistinctToken = "COUNT_DISTINCT"i !IdentifierPart { return 'countDistinct'; }
+SumToken           = "SUM"i            !IdentifierPart { return 'sum'; }
+AvgToken           = "AVG"i            !IdentifierPart { return 'average'; }
+MinToken           = "MIN"i            !IdentifierPart { return 'min'; }
+MaxToken           = "MAX"i            !IdentifierPart { return 'max'; }
+QuantileToken      = "QUANTILE"i       !IdentifierPart { return 'quantile'; }
+
+TimeBucketToken    = "TIME_BUCKET"i    !IdentifierPart
+NumberBucketToken  = "NUMBER_BUCKET"i  !IdentifierPart
+TimePartToken      = "TIME_PART"i      !IdentifierPart
+SubstrToken        = "SUBSTR"i         !IdentifierPart
+ConcatToken        = "CONCAT"i         !IdentifierPart
 
 IdentifierPart = [A-Za-z_]
 
