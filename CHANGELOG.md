@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.15.4
+
+* changed internal facetjs code to use more ES6 features following the beta release of TypeScript 1.5
+
 ## 0.15.3
 
 * added support for uniques
