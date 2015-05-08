@@ -43,7 +43,8 @@ function reserved(str) {
 function extractGroupByColumn(columns, groupBy) {
   var label = null;
   var applyColumns = [];
-  for (let column of columns) {
+  for (var i = 0; i < columns.length; i++) {
+    var column = columns[i];
     if (groupBy.equals(column.expression)) {
       if (label) error('already have a label');
       label = column.name;
