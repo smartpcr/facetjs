@@ -37,7 +37,7 @@ module Facet {
         this.operand.equals(other.operand)
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1 + this.operand.expressionCount();
     }
 
@@ -65,7 +65,7 @@ module Facet {
       return new (Expression.classMap[this.op])(simpleValue);
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       var pass = iter.call(thisArg, this, indexer.index, depth, nestDiff);
       if (pass != null) {
         return pass;
@@ -77,11 +77,11 @@ module Facet {
           && this._specialEvery(iter, thisArg, indexer, depth, nestDiff);
     }
 
-    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       return true;
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();

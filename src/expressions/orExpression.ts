@@ -12,14 +12,14 @@ module Facet {
     }
 
     public toString(): string {
-      return '(' + this.operands.map((operand) => operand.toString()).join(' or ') + ')';
+      return '(' + this.operands.map(operand => operand.toString()).join(' or ') + ')';
     }
 
     protected _getFnHelper(operandFns: ComputeFn[]): ComputeFn {
       return (d: Datum) => {
         var res = false;
-        for (var i = 0; i < operandFns.length; i++) {
-          res = res || operandFns[i](d);
+        for (let operandFn of operandFns) {
+          res = res || operandFn(d);
         }
         return res;
       }
@@ -47,21 +47,20 @@ module Facet {
       var simplifiedOperands = this._getSimpleOperands();
 
       var groupedOperands: Lookup<Expression[]> = {};
-      for (var j = 0; j < simplifiedOperands.length; j++) {
-        var thisOperand = simplifiedOperands[j];
-        var referenceGroup = thisOperand.getFreeReferences().toString();
+      for (let simplifiedOperand of simplifiedOperands) {
+        let referenceGroup = simplifiedOperand.getFreeReferences().toString();
 
         if (groupedOperands[referenceGroup]) {
-          groupedOperands[referenceGroup].push(thisOperand);
+          groupedOperands[referenceGroup].push(simplifiedOperand);
         } else {
-          groupedOperands[referenceGroup] = [thisOperand];
+          groupedOperands[referenceGroup] = [simplifiedOperand];
         }
       }
 
       var sortedReferenceGroups = Object.keys(groupedOperands).sort();
       var finalOperands: Expression[] = [];
-      for (var k = 0; k < sortedReferenceGroups.length; k++) {
-        var mergedExpressions = multiMerge(groupedOperands[sortedReferenceGroups[k]], (a, b) => {
+      for (let sortedReferenceGroup of sortedReferenceGroups) {
+        let mergedExpressions = multiMerge(groupedOperands[sortedReferenceGroup], (a, b) => {
           return a ? a.mergeOr(b) : null;
         });
         if (mergedExpressions.length === 1) {

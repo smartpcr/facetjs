@@ -2,11 +2,9 @@ module Facet {
   export class NaryExpression extends Expression {
     static jsToValue(parameters: ExpressionJS): ExpressionValue {
       var op = parameters.op;
-      var value: ExpressionValue = {
-        op: op
-      };
+      var value: ExpressionValue = { op };
       if (Array.isArray(parameters.operands)) {
-        value.operands = parameters.operands.map((operand) => Expression.fromJSLoose(operand));
+        value.operands = parameters.operands.map(operand => Expression.fromJSLoose(operand));
       } else {
         throw new TypeError("must have a operands");
       }
@@ -29,25 +27,19 @@ module Facet {
 
     public toJS(): ExpressionJS {
       var js = super.toJS();
-      js.operands = this.operands.map((operand) => operand.toJS());
+      js.operands = this.operands.map(operand => operand.toJS());
       return js;
     }
 
     public equals(other: NaryExpression): boolean {
-      if (!(super.equals(other) && this.operands.length === other.operands.length)) return false;
-      var thisOperands = this.operands;
-      var otherOperands = other.operands;
-      for (var i = 0; i < thisOperands.length; i++) {
-        if (!thisOperands[i].equals(otherOperands[i])) return false;
-      }
-      return true;
+      return super.equals(other) && higherArraysEqual(this.operands, other.operands);
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       var expressionCount = 1;
       var operands = this.operands;
-      for (var i = 0; i < operands.length; i++) {
-        expressionCount += operands[i].expressionCount();
+      for (let operand of operands) {
+        expressionCount += operand.expressionCount();
       }
       return expressionCount;
     }
@@ -67,8 +59,8 @@ module Facet {
       var zeroValue = this._getZeroValue();
 
       var simpleOperands: Expression[] = [];
-      for (var i = 0; i < operands.length; i++) {
-        var simpleOperand = operands[i].simplify();
+      for (let operand of operands) {
+        let simpleOperand = operand.simplify();
 
         if (simpleOperand instanceof LiteralExpression) {
           if (unitValue !== null && simpleOperand.value === unitValue) continue;
@@ -112,11 +104,11 @@ module Facet {
       var special = this._specialSimplify(simpleOperands);
       if (special) return special;
 
-      var literalOperands = simpleOperands.filter((operand) => operand.isOp('literal')); // ToDo: add hasRemote and better call
-      var nonLiteralOperands = simpleOperands.filter((operand) => !operand.isOp('literal'));
+      var literalOperands = simpleOperands.filter(operand => operand.isOp('literal')); // ToDo: add hasRemote and better call
+      var nonLiteralOperands = simpleOperands.filter(operand => !operand.isOp('literal'));
       var literalExpression = new LiteralExpression({
         op: 'literal',
-        value: this._getFnHelper(literalOperands.map((operand) => operand.getFn()))(null)
+        value: this._getFnHelper(literalOperands.map(operand => operand.getFn()))(null)
       });
 
       if (nonLiteralOperands.length) {
@@ -127,7 +119,7 @@ module Facet {
       }
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       var pass = iter.call(thisArg, this, indexer.index, depth, nestDiff);
       if (pass != null) {
         return pass;
@@ -135,10 +127,10 @@ module Facet {
         indexer.index++;
       }
 
-      return this.operands.every((operand) => operand._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff));
+      return this.operands.every(operand => operand._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff));
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
@@ -147,7 +139,7 @@ module Facet {
         indexer.index++;
       }
 
-      var subOperands = this.operands.map((operand) => operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff));
+      var subOperands = this.operands.map(operand => operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff));
       if (this.operands.every((op, i) => op === subOperands[i])) return this;
 
       var value = this.valueOf();
@@ -161,7 +153,7 @@ module Facet {
     }
 
     public getFn(): ComputeFn {
-      return this._getFnHelper(this.operands.map((operand) => operand.getFn()));
+      return this._getFnHelper(this.operands.map(operand => operand.getFn()));
     }
 
     protected _getJSExpressionHelper(operandJSExpressions: string[]): string {
@@ -169,7 +161,7 @@ module Facet {
     }
 
     public getJSExpression(datumVar: string): string {
-      return this._getJSExpressionHelper(this.operands.map((operand) => operand.getJSExpression(datumVar)));
+      return this._getJSExpressionHelper(this.operands.map(operand => operand.getJSExpression(datumVar)));
     }
 
     protected _getSQLHelper(operandSQLs: string[], dialect: SQLDialect, minimal: boolean): string {
@@ -177,7 +169,7 @@ module Facet {
     }
 
     public getSQL(dialect: SQLDialect, minimal: boolean = false): string {
-      return this._getSQLHelper(this.operands.map((operand) => operand.getSQL(dialect, minimal)), dialect, minimal);
+      return this._getSQLHelper(this.operands.map(operand => operand.getSQL(dialect, minimal)), dialect, minimal);
     }
 
     protected _checkTypeOfOperands(wantedType: string): void {
@@ -191,7 +183,7 @@ module Facet {
 
     public _fillRefSubstitutions(typeContext: FullType, indexer: Indexer, alterations: Alterations): FullType {
       indexer.index++;
-      var remotes = this.operands.map((operand) => operand._fillRefSubstitutions(typeContext, indexer, alterations).remote);
+      var remotes = this.operands.map(operand => operand._fillRefSubstitutions(typeContext, indexer, alterations).remote);
       return {
         type: this.type,
         remote: mergeRemotes(remotes)

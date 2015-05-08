@@ -4,7 +4,7 @@ module Facet {
 
     export interface SimpleLocatorParameters {
       resource: string;
-      defaultPort?: number;
+      defaultPort?: int;
     }
 
     export function simpleLocator(parameters: string): Locator.FacetLocator;
@@ -15,7 +15,7 @@ module Facet {
       var defaultPort: number = parameters.defaultPort;
       if (!resource) throw new Error("must have resource");
 
-      var locations = resource.split(";").map((locationString) => {
+      var locations = resource.split(";").map(locationString => {
         var parts = locationString.split(":");
         if (parts.length > 2) throw new Error("invalid resource part '" + locationString + "'");
 

@@ -8,7 +8,7 @@ module Facet {
       });
     }
 
-    public limit: number;
+    public limit: int;
 
     constructor(parameters: ActionValue = {}) {
       super(parameters, dummyObject);

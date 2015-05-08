@@ -1,7 +1,7 @@
 module Facet {
-  var DUMMY_NAME = '!DUMMY';
+  const DUMMY_NAME = '!DUMMY';
 
-  var timePartToFormat: Lookup<string> = {
+  const TIME_PART_TO_FORMAT: Lookup<string> = {
     SECOND_OF_MINUTE: "s",
     SECOND_OF_HOUR: "m'*60+'s",
     SECOND_OF_DAY: "H'*60+'m'*60+'s",
@@ -28,14 +28,13 @@ module Facet {
     WEEK_OF_YEAR: "w"
   };
 
-  function simpleMath(exprStr: string): number {
+  function simpleMath(exprStr: string): int {
     if (String(exprStr) === 'null') return null;
     var parts = exprStr.split(/(?=[*+])/);
     var acc = parseInt(parts.shift(), 10);
-    for (var i = 0; i < parts.length; i++) {
-      var p = parts[i];
-      var v = parseInt(p.substring(1), 10);
-      acc = p[0] === '*' ? acc * v : acc + v;
+    for (let part of parts) {
+      var v = parseInt(part.substring(1), 10);
+      acc = part[0] === '*' ? acc * v : acc + v;
     }
     return acc;
   }
@@ -98,10 +97,9 @@ module Facet {
 
       var result = res[0].result;
       var datum: Datum = {};
-      for (var i = 0; i < applies.length; i++) {
-        var apply = applies[i];
-        var name = apply.name;
-        var aggregate = (<AggregateExpression>apply.expression).fn;
+      for (let apply of applies) {
+        let name = apply.name;
+        let aggregate = (<AggregateExpression>apply.expression).fn;
         if (typeof result === 'string') {
           datum[name] = new Date(result);
         } else {
@@ -113,7 +111,7 @@ module Facet {
         }
       }
 
-      return new NativeDataset({source: 'native', data: [datum]});
+      return new NativeDataset({ source: 'native', data: [datum] });
     };
   }
 
@@ -138,7 +136,7 @@ module Facet {
       var canonicalDurationLengthAndThenSome = duration.getCanonicalLength() * 1.5;
       return new NativeDataset({
         source: 'native',
-        data: res.map((d: any, i: number) => {
+        data: res.map((d: any, i: int) => {
           var rangeStart = new Date(d.timestamp);
           var next = res[i + 1];
           var nextTimestamp: Date;
@@ -217,7 +215,7 @@ module Facet {
     }
     return new NativeDataset({
       source: 'native',
-      data: res.map((r) => {
+      data: res.map(r => {
         var datum = r.event;
         cleanDatumInPlace(datum);
         return datum;
@@ -233,7 +231,7 @@ module Facet {
     }
     return new NativeDataset({
       source: 'native',
-      data: res[0].result.events.map((event) => event.event)
+      data: res[0].result.events.map(event => event.event)
     });
   }
 
@@ -241,10 +239,10 @@ module Facet {
     return (res: Druid.DatasourceIntrospectResult): Lookup<AttributeInfo> => {
       var attributes: Lookup<AttributeInfo> = Object.create(null);
       attributes[timeAttribute] = new AttributeInfo({ type: 'TIME' });
-      res.dimensions.forEach((dimension) => {
+      res.dimensions.forEach(dimension => {
         attributes[dimension] = new AttributeInfo({ type: 'STRING' });
       });
-      res.metrics.forEach((metric) => {
+      res.metrics.forEach(metric => {
         attributes[metric] = new AttributeInfo({ type: 'NUMBER', filterable: false, splitable: false });
       });
       return attributes;
@@ -399,7 +397,7 @@ module Facet {
     public canUseNativeAggregateFilter(filterExpression: Expression): boolean {
       if (filterExpression.type !== 'BOOLEAN') throw new Error("must be a BOOLEAN filter");
 
-      return filterExpression.every((ex) => {
+      return filterExpression.every(ex => {
         if (ex instanceof IsExpression) {
           return ex.lhs.isOp('ref') && ex.rhs.isOp('literal')
         } else if (ex instanceof InExpression) {
@@ -539,7 +537,7 @@ module Facet {
             throw new Error("not supported " + rhsType + " for time filtering");
           }
 
-          return timeRanges.map((timeRange) => timeRange.toInterval());
+          return timeRanges.map(timeRange => timeRange.toInterval());
         } else {
           throw new Error("can not convert " + filter.toString() + " to Druid interval");
         }
@@ -671,7 +669,7 @@ return (start < 0 ?'-':'') + parts.join('.');
         var refExpression = splitExpression.operand;
         if (refExpression instanceof RefExpression) {
           queryType = 'topN';
-          var format = timePartToFormat[splitExpression.part];
+          var format = TIME_PART_TO_FORMAT[splitExpression.part];
           if (!format) throw new Error(`unsupported part in timePart expression ${splitExpression.part}`);
           dimension = {
             type: "extraction",
@@ -788,7 +786,7 @@ return (start < 0 ?'-':'') + parts.join('.');
         return {
           type: 'arithmetic',
           fn: fn,
-          fields: operands.map((operand) => {
+          fields: operands.map(operand => {
             return this.expressionToPostAggregation(operand, aggregations);
           }, this)
         };
@@ -799,8 +797,7 @@ return (start < 0 ?'-':'') + parts.join('.');
       if (ex instanceof RefExpression) {
         var refName = ex.name;
         var accessType: string;
-        for (var i = 0; i < aggregations.length; i++) {
-          var aggregation = aggregations[i];
+        for (let aggregation of aggregations) {
           if (aggregation.name === refName) {
             var aggType = aggregation.type;
             accessType = (aggType === 'hyperUnique' || aggType === 'cardinality') ? 'hyperUniqueCardinality' : 'fieldAccess';
@@ -832,8 +829,8 @@ return (start < 0 ?'-':'') + parts.join('.');
           opposite = 'reciprocate';
           zero = 1;
         }
-        var additive = ex.operands.filter((o) => o.op !== opposite);
-        var subtractive = ex.operands.filter((o) => o.op === opposite);
+        var additive = ex.operands.filter(o => o.op !== opposite);
+        var subtractive = ex.operands.filter(o => o.op === opposite);
         if (!additive.length) additive.push(new LiteralExpression({ op: 'literal', value: zero }));
 
         if (subtractive.length) {
@@ -842,7 +839,7 @@ return (start < 0 ?'-':'') + parts.join('.');
             fn: antiFn,
             fields: [
               this.operandsToArithmetic(additive, fn, aggregations),
-              this.operandsToArithmetic(subtractive.map((op) => (<UnaryExpression>op).operand), fn, aggregations)
+              this.operandsToArithmetic(subtractive.map(op => (<UnaryExpression>op).operand), fn, aggregations)
             ]
           };
         } else {
@@ -953,7 +950,7 @@ return (start < 0 ?'-':'') + parts.join('.');
     }
 
     public processApply(apply: ApplyAction): Action[] {
-      return this.separateAggregates(<ApplyAction>apply.applyToExpression((ex) => {
+      return this.separateAggregates(<ApplyAction>apply.applyToExpression(ex => {
         return this.inlineDerivedAttributes(ex).decomposeAverage().distributeAggregates();
       }), true);
     }
@@ -962,13 +959,13 @@ return (start < 0 ?'-':'') + parts.join('.');
       var aggregations: Druid.Aggregation[] = [];
       var postAggregations: Druid.PostAggregation[] = [];
 
-      this.defs.forEach((action) => {
+      this.defs.forEach(action => {
         if (action.expression instanceof AggregateExpression) {
           aggregations.push(this.actionToAggregation(action));
         }
       });
 
-      this.applies.forEach((action) => {
+      this.applies.forEach(action => {
         if (action.expression instanceof AggregateExpression) {
           aggregations.push(this.actionToAggregation(action));
         } else {

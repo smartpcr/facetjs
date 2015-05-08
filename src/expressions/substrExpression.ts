@@ -7,8 +7,8 @@ module Facet {
       return new SubstrExpression(value);
     }
 
-    public position: number;
-    public length: number;
+    public position: int;
+    public length: int;
 
     constructor(parameters: ExpressionValue) {
       super(parameters, dummyObject);

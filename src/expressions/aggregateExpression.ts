@@ -115,11 +115,11 @@ module Facet {
       throw new Error("can not getSQL with complex operand");
     }
 
-    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       return this.attribute ? this.attribute._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff + 1) : true;
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
@@ -142,7 +142,7 @@ module Facet {
       return new AggregateExpression(value);
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1 + this.operand.expressionCount() + (this.attribute ? this.attribute.expressionCount() : 0);
     }
 
@@ -209,7 +209,7 @@ module Facet {
       } else if (attribute instanceof AddExpression) {
         return new AddExpression({
           op: 'add',
-          operands: attribute.operands.map((attributeOperand) => operand.sum(attributeOperand).distributeAggregates())
+          operands: attribute.operands.map(attributeOperand => operand.sum(attributeOperand).distributeAggregates())
         });
 
       } else if (attribute instanceof NegateExpression) {
@@ -219,8 +219,7 @@ module Facet {
         var attributeOperands = attribute.operands;
         var literalSubExpression: Expression;
         var restOfOperands: Expression[] = [];
-        for (var i = 0; i < attributeOperands.length; i++) {
-          var attributeOperand = attributeOperands[i];
+        for (let attributeOperand of attributeOperands) {
           if (!literalSubExpression && attributeOperand.isOp('literal')) {
             literalSubExpression = attributeOperand;
           } else {

@@ -2,9 +2,7 @@ module Facet {
   export class BinaryExpression extends Expression {
     static jsToValue(parameters: ExpressionJS): ExpressionValue {
       var op = parameters.op;
-      var value: ExpressionValue = {
-        op: op
-      };
+      var value: ExpressionValue = { op };
       if (typeof parameters.lhs !== 'undefined' && parameters.lhs !== null) {
         value.lhs = Expression.fromJSLoose(parameters.lhs);
       } else {
@@ -49,7 +47,7 @@ module Facet {
         this.rhs.equals(other.rhs);
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1 + this.lhs.expressionCount() + this.rhs.expressionCount()
     }
 
@@ -100,7 +98,7 @@ module Facet {
       }
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       var pass = iter.call(thisArg, this, indexer.index, depth, nestDiff);
       if (pass != null) {
         return pass;
@@ -112,7 +110,7 @@ module Facet {
           && this.rhs._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();

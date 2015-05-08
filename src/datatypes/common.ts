@@ -147,7 +147,7 @@ module Facet {
 
   export function introspectDatum(datum: Datum): Q.Promise<Datum> {
     return Q.all(
-      Object.keys(datum).map((applyName) => {
+      Object.keys(datum).map(applyName => {
         var applyValue = datum[applyName];
         if (applyValue instanceof RemoteDataset && applyValue.needsIntrospect()) {
           return applyValue.introspect().then((newRemoteDataset: RemoteDataset) => {

@@ -24,30 +24,23 @@ module Facet {
 
     public toJS(): ExpressionJS {
       var js = super.toJS();
-      js.actions = this.actions.map((action) => action.toJS());
+      js.actions = this.actions.map(action => action.toJS());
       return js;
     }
 
     public toString(): string {
-      return this.operand.toString() + this.actions.map((action) => action.toString()).join('\n  ');
+      return this.operand.toString() + this.actions.map(action => action.toString()).join('\n  ');
     }
 
     public equals(other: ActionsExpression): boolean {
-      if (!super.equals(other)) return false;
-      var thisActions = this.actions;
-      var otherActions = other.actions;
-      if (thisActions.length !== otherActions.length) return false;
-      for (var i = 0; i < thisActions.length; i++) {
-        if (!thisActions[i].equals(otherActions[i])) return false;
-      }
-      return true;
+      return super.equals(other) && higherArraysEqual(this.actions, other.actions);
     }
 
-    public expressionCount(): number {
+    public expressionCount(): int {
       var expressionCount = super.expressionCount();
       var actions = this.actions;
-      for (var i = 0; i < actions.length; i++) {
-        expressionCount += actions[i].expressionCount();
+      for (let action of actions) {
+        expressionCount += action.expressionCount();
       }
       return expressionCount;
     }
@@ -63,8 +56,7 @@ module Facet {
 
         var dataset = operand.getFn()(null, def);
 
-        for (var i = 0; i < actions.length; i++) {
-          var action = actions[i];
+        for (let action of actions) {
           var actionExpression = action.expression;
 
           if (action instanceof FilterAction) {
@@ -101,7 +93,7 @@ module Facet {
       if (this.simple) return this;
 
       var simpleOperand = this.operand.simplify();
-      var simpleActions = this.actions.map((action) => action.simplify()); //this._getSimpleActions();
+      var simpleActions = this.actions.map(action => action.simplify()); //this._getSimpleActions();
 
       function isRemoteSimpleApply(action: Action): boolean {
         return action instanceof ApplyAction && action.expression.hasRemote() && action.expression.type !== 'DATASET';
@@ -139,7 +131,7 @@ module Facet {
         }
         if (simpleOperand !== digestedOperand) {
           simpleOperand = digestedOperand;
-          var defsToAddBack: Action[] = absorbedDefs.filter((def) => {
+          var defsToAddBack: Action[] = absorbedDefs.filter(def => {
             return Action.actionsDependOn(undigestedActions, def.name);
           });
           simpleActions = defsToAddBack.concat(undigestedActions);
@@ -154,11 +146,10 @@ module Facet {
       return new ActionsExpression(simpleValue);
     }
 
-    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    protected _specialEvery(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       var actions = this.actions;
       var every: boolean = true;
-      for (var i = 0; i < actions.length; i++) {
-        var action = actions[i];
+      for (let action of actions) {
         if (every) {
           every = action._everyHelper(iter, thisArg, indexer, depth + 1, nestDiff + 1);
         } else {
@@ -168,7 +159,7 @@ module Facet {
       return every;
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
@@ -178,7 +169,7 @@ module Facet {
       }
 
       var subOperand = this.operand._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff);
-      var subActions = this.actions.map((action) => action._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff + 1));
+      var subActions = this.actions.map(action => action._substituteHelper(substitutionFn, thisArg, indexer, depth + 1, nestDiff + 1));
       if (this.operand === subOperand && arraysEqual(this.actions, subActions)) return this;
 
       var value = this.valueOf();
@@ -201,8 +192,7 @@ module Facet {
       typeContext = this.operand._fillRefSubstitutions(typeContext, indexer, alterations);
 
       var actions = this.actions;
-      for (var i = 0; i < actions.length; i++) {
-        var action = actions[i];
+      for (let action of actions) {
         if (action instanceof DefAction || action instanceof ApplyAction) {
           typeContext.datasetType[action.name] = action.expression._fillRefSubstitutions(typeContext, indexer, alterations);
         } else if (action instanceof SortAction || action instanceof FilterAction) {
@@ -216,7 +206,7 @@ module Facet {
     public _computeResolved(): Q.Promise<NativeDataset> {
       var actions = this.actions;
 
-      function execAction(i: number) {
+      function execAction(i: int) {
         return (dataset: NativeDataset): NativeDataset | Q.Promise<NativeDataset> => {
           var action = actions[i];
           var actionExpression = action.expression;

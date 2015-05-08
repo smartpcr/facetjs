@@ -16,15 +16,15 @@ module Facet {
   function hashFromJS(xs: Array<string>, setType: string): Lookup<any> {
     var keyFn: (v: any) => string = setType === 'TIME' ? dateString : String;
     var hash: Lookup<any> = Object.create(null);
-    for (var i = 0; i < xs.length; i++) {
-      var x = valueFromJS(xs[i], setType);
+    for (let xv of xs) {
+      var x = valueFromJS(xv, setType);
       hash[keyFn(x)] = x;
     }
     return hash;
   }
 
   function hashToValues(hash: Lookup<any>): Array<any> {
-    return Object.keys(hash).sort().map((k) => hash[k]);
+    return Object.keys(hash).sort().map(k => hash[k]);
   }
 
   function unifyElements(elements: Lookup<Range<any>>): Lookup<Range<any>> {
@@ -32,8 +32,7 @@ module Facet {
     for (var k in elements) {
       var accumulator = elements[k];
       var newElementsKeys = Object.keys(newElements);
-      for (var i = 0; i < newElementsKeys.length; i++) {
-        var newElementsKey = newElementsKeys[i];
+      for (let newElementsKey of newElementsKeys) {
         var newElement = newElements[newElementsKey];
         var unionElement = accumulator.union(newElement);
         if (unionElement) {
@@ -213,8 +212,7 @@ module Facet {
       if (this.setType === 'NUMBER_RANGE' || this.setType === 'TIME_RANGE') {
         var elements: Array<Range<any>> = this.getElements();
         var simpleElements: any[] = [];
-        for (var i = 0; i < elements.length; i++) {
-          var element = elements[i];
+        for (let element of elements) {
           if (element.degenerate()) {
             simpleElements.push(element.start);
           } else {
@@ -336,7 +334,7 @@ module Facet {
       return new NativeDataset({
         source: 'native',
         key: name,
-        data: this.getElements().map((v) => {
+        data: this.getElements().map(v => {
           var datum: Datum = {};
           datum[name] = v;
           return datum

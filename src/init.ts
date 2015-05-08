@@ -46,6 +46,7 @@
  */
 
 interface Lookup<T> { [key: string]: T }
+type int = number;
 interface Dummy {}
 
 interface DELETE_START {} // This is just a marker for the declaration post processor
@@ -87,7 +88,7 @@ function hasOwnProperty(obj: any, key: string): boolean {
   return objectHasOwnProperty.call(obj, key);
 }
 
-function repeat(str: string, times: number): string {
+function repeat(str: string, times: int): string {
   return new Array(times + 1).join(str);
 }
 
@@ -95,8 +96,7 @@ function deduplicateSort(a: string[]): string[] {
   a = a.sort();
   var newA: string[] = [];
   var last: string = null;
-  for (var i = 0; i < a.length; i++) {
-    var v = a[i];
+  for (let v of a) {
     if (v !== last) newA.push(v);
     last = v;
   }
@@ -105,11 +105,9 @@ function deduplicateSort(a: string[]): string[] {
 
 function multiMerge<T>(elements: T[], mergeFn: (a: T, b: T) => T): T[] {
   var newElements: T[] = [];
-  for (var i = 0; i < elements.length; i++) {
-    var accumulator = elements[i];
-    var tempElements: T[] = [];
-    for (var j = 0; j < newElements.length; j++) {
-      var newElement = newElements[j];
+  for (let accumulator of elements) {
+    let tempElements: T[] = [];
+    for (let newElement of newElements) {
       var mergeElement = mergeFn(accumulator, newElement);
       if (mergeElement) {
         accumulator = mergeElement;
@@ -124,7 +122,21 @@ function multiMerge<T>(elements: T[], mergeFn: (a: T, b: T) => T): T[] {
 }
 
 function arraysEqual<T>(a: Array<T>, b: Array<T>): boolean {
-  return a.length === b.length && a.every((item, i) => (item === b[i]));
+  var length = a.length;
+  if (length !== b.length) return false;
+  for (var i = 0; i < length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function higherArraysEqual(a: Array<any>, b: Array<any>): boolean {
+  var length = a.length;
+  if (length !== b.length) return false;
+  for (var i = 0; i < length; i++) {
+    if (!a[i].equals(b[i])) return false;
+  }
+  return true;
 }
 
 var expressionParser: PEGParser;
@@ -160,9 +172,9 @@ module Facet {
     }
   }
 
-  export function find<T>(array: T[], fn: (value: T, index: number, array: T[]) => boolean): T {
-    for (var i = 0; i < array.length; i++) {
-      var a = array[i];
+  export function find<T>(array: T[], fn: (value: T, index: int, array: T[]) => boolean): T {
+    for (let i = 0, n = array.length; i < n; i++) {
+      let a = array[i];
       if (fn.call(array, a, i)) return a;
     }
     return null;

@@ -1,14 +1,14 @@
 module Facet {
   export interface SubstitutionFn {
-    (ex: Expression, index?: number, depth?: number, nestDiff?: number): Expression;
+    (ex: Expression, index?: int, depth?: int, nestDiff?: int): Expression;
   }
 
   export interface BooleanExpressionIterator {
-    (ex: Expression, index?: number, depth?: number, nestDiff?: number): boolean;
+    (ex: Expression, index?: int, depth?: int, nestDiff?: int): boolean;
   }
 
   export interface VoidExpressionIterator {
-    (ex: Expression, index?: number, depth?: number, nestDiff?: number): void;
+    (ex: Expression, index?: int, depth?: int, nestDiff?: int): void;
   }
 
   export interface DatasetBreakdown {
@@ -22,7 +22,7 @@ module Facet {
   }
 
   export interface Indexer {
-    index: number
+    index: int
   }
 
   export type Alterations = Lookup<Expression>;
@@ -49,9 +49,9 @@ module Facet {
     duration?: Duration;
     timezone?: Timezone;
     part?: string;
-    position?: number;
-    length?: number;
-    nest?: number;
+    position?: int;
+    length?: int;
+    nest?: int;
   }
 
   export interface ExpressionJS {
@@ -74,9 +74,9 @@ module Facet {
     duration?: string;
     timezone?: string;
     part?: string;
-    position?: number;
-    length?: number;
-    nest?: number;
+    position?: int;
+    length?: int;
+    nest?: int;
   }
 
   export interface Separation {
@@ -98,11 +98,10 @@ module Facet {
 
   export function mergeRemotes(remotes: string[][]): string[] {
     var lookup: Lookup<boolean> = {};
-    for (var i = 0; i < remotes.length; i++) {
-      var remote = remotes[i];
+    for (let remote of remotes) {
       if (!remote) continue;
-      for (var j = 0; j < remote.length; j++) {
-        lookup[remote[j]] = true;
+      for (let r of remote) {
+        lookup[r] = true;
       }
     }
     var merged = Object.keys(lookup);
@@ -337,7 +336,7 @@ module Facet {
      *
      * @returns {number}
      */
-    public expressionCount(): number {
+    public expressionCount(): int {
       return 1;
     }
 
@@ -405,7 +404,7 @@ module Facet {
      */
     public getFreeReferences(): string[] {
       var freeReferences: string[] = [];
-      this.forEach((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      this.forEach((ex: Expression, index: int, depth: int, nestDiff: int) => {
         if (ex instanceof RefExpression && nestDiff <= ex.nest) {
           freeReferences.push(repeat('^', ex.nest - nestDiff) + ex.name);
         }
@@ -420,7 +419,7 @@ module Facet {
      */
     public getFreeReferenceIndexes(): number[] {
       var freeReferenceIndexes: number[] = [];
-      this.forEach((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      this.forEach((ex: Expression, index: int, depth: int, nestDiff: int) => {
         if (ex instanceof RefExpression && nestDiff <= ex.nest) {
           freeReferenceIndexes.push(index);
         }
@@ -434,10 +433,10 @@ module Facet {
      * @param by The number of generation to increment by (default: 1)
      * @returns {any}
      */
-    public incrementNesting(by: number = 1): Expression {
+    public incrementNesting(by: int = 1): Expression {
       var freeReferenceIndexes = this.getFreeReferenceIndexes();
       if (freeReferenceIndexes.length === 0) return this;
-      return this.substitute((ex: Expression, index: number) => {
+      return this.substitute((ex: Expression, index: int) => {
         if (ex instanceof RefExpression && freeReferenceIndexes.indexOf(index) !== -1) {
           return ex.incrementNesting(by);
         }
@@ -484,7 +483,7 @@ module Facet {
       return this._everyHelper(iter, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): boolean {
+    public _everyHelper(iter: BooleanExpressionIterator, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): boolean {
       return iter.call(thisArg, this, indexer.index, depth, nestDiff) !== false;
     }
 
@@ -496,7 +495,7 @@ module Facet {
      * @returns {boolean}
      */
     public some(iter: BooleanExpressionIterator, thisArg?: any): boolean {
-      return !this.every((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      return !this.every((ex: Expression, index: int, depth: int, nestDiff: int) => {
         var v = iter.call(this, ex, index, depth, nestDiff);
         return (v == null) ? null : !v;
       }, thisArg);
@@ -510,7 +509,7 @@ module Facet {
      * @returns {boolean}
      */
     public forEach(iter: VoidExpressionIterator, thisArg?: any): void {
-      this.every((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      this.every((ex: Expression, index: int, depth: int, nestDiff: int) => {
         iter.call(this, ex, index, depth, nestDiff);
         return null;
       }, thisArg);
@@ -527,7 +526,7 @@ module Facet {
       return this._substituteHelper(substitutionFn, thisArg, { index: 0 }, 0, 0);
     }
 
-    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: number, nestDiff: number): Expression {
+    public _substituteHelper(substitutionFn: SubstitutionFn, thisArg: any, indexer: Indexer, depth: int, nestDiff: int): Expression {
       var sub = substitutionFn.call(thisArg, this, indexer.index, depth, nestDiff);
       if (sub) {
         indexer.index += this.expressionCount();
@@ -583,7 +582,7 @@ module Facet {
         throw new Error('not a multiple dataset expression');
       }
 
-      var combine = this.substitute((ex) => {
+      var combine = this.substitute(ex => {
         var remoteDatasets = ex.getRemoteDatasetIds();
         if (remoteDatasets.length !== 1) return null;
 
@@ -673,7 +672,7 @@ module Facet {
       return this.performAction(new SortAction({ expression: ex, direction: direction }));
     }
 
-    public limit(limit: number): Expression {
+    public limit(limit: int): Expression {
       return this.performAction(new LimitAction({ limit: limit }));
     }
 
@@ -785,8 +784,8 @@ module Facet {
     // Expression constructors (Nary)
     protected _performNaryExpression(newValue: ExpressionValue, otherExs: any[]): Expression {
       if (!otherExs.length) throw new Error('must have at least one argument');
-      for (var i = 0; i < otherExs.length; i++) {
-        var otherEx = otherExs[i];
+      for (let i = 0; i < otherExs.length; i++) {
+        let otherEx = otherExs[i];
         if (Expression.isExpression(otherEx)) continue;
         otherExs[i] = Expression.fromJSLoose(otherEx);
       }
@@ -797,8 +796,8 @@ module Facet {
     public add(...exs: any[]) { return this._performNaryExpression({ op: 'add' }, exs); }
     public subtract(...exs: any[]) {
       if (!exs.length) throw new Error('must have at least one argument');
-      for (var i = 0; i < exs.length; i++) {
-        var ex = exs[i];
+      for (let i = 0; i < exs.length; i++) {
+        let ex = exs[i];
         if (Expression.isExpression(ex)) continue;
         exs[i] = Expression.fromJSLoose(ex);
       }
@@ -812,8 +811,8 @@ module Facet {
     public multiply(...exs: any[]) { return this._performNaryExpression({ op: 'multiply' }, exs); }
     public divide(...exs: any[]) {
       if (!exs.length) throw new Error('must have at least one argument');
-      for (var i = 0; i < exs.length; i++) {
-        var ex = exs[i];
+      for (let i = 0; i < exs.length; i++) {
+        let ex = exs[i];
         if (Expression.isExpression(ex)) continue;
         exs[i] = Expression.fromJSLoose(ex);
       }
@@ -831,6 +830,7 @@ module Facet {
      * Checks for references and returns the list of alterations that need to be made to the expression
      *
      * @param typeContext the context inherited from the parent
+     * @param indexer the index along the tree to maintain
      * @param alterations the accumulation of the alterations to be made (output)
      * @returns the resolved type of the expression
      * @private
@@ -860,7 +860,7 @@ module Facet {
       var alterations: Alterations = {};
       this._fillRefSubstitutions(typeContext, { index: 0 }, alterations); // This return the final type
       if (!Object.keys(alterations).length) return this;
-      return this.substitute((ex: Expression, index: number): Expression => alterations[index] || null);
+      return this.substitute((ex: Expression, index: int): Expression => alterations[index] || null);
     }
 
     /**
@@ -871,7 +871,7 @@ module Facet {
      * @return The resolved expression
      */
     public resolve(context: Datum, leaveIfNotFound: boolean = false): Expression {
-      return this.substitute((ex: Expression, index: number, depth: number, nestDiff: number) => {
+      return this.substitute((ex: Expression, index: int, depth: int, nestDiff: int) => {
         if (ex instanceof RefExpression) {
           var refGen = ex.nest;
           if (nestDiff === refGen) {
@@ -912,7 +912,7 @@ module Facet {
      * Decompose instances of $data.average($x) into $data.sum($x) / $data.count()
      */
     public decomposeAverage(): Expression {
-      return this.substitute((ex) => {
+      return this.substitute(ex => {
         return ex.isOp('aggregate') ? ex.decomposeAverage() : null;
       })
     }
@@ -922,7 +922,7 @@ module Facet {
      * Turns $data.sum($x - 2 * $y) into $data.sum($x) - 2 * $data.sum($y)
      */
     public distributeAggregates(): Expression {
-      return this.substitute((ex) => {
+      return this.substitute(ex => {
         return ex.isOp('aggregate') ? ex.distributeAggregates() : null;
       })
     }
@@ -961,7 +961,7 @@ module Facet {
         return Q(this.computeNative(context));
       }
       var ex = this;
-      return introspectDatum(context).then((introspectedContext) => {
+      return introspectDatum(context).then(introspectedContext => {
         return ex.referenceCheck(introspectedContext).resolve(introspectedContext).simplify()._computeResolved();
       });
     }

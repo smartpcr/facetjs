@@ -12,14 +12,14 @@ module Facet {
     }
 
     public toString(): string {
-      return '(' + this.operands.map((operand) => operand.toString()).join(' * ') + ')';
+      return '(' + this.operands.map(operand => operand.toString()).join(' * ') + ')';
     }
 
     protected _getFnHelper(operandFns: ComputeFn[]): ComputeFn {
       return (d: Datum) => {
         var res = 1;
-        for (var i = 0; i < operandFns.length; i++) {
-          res *= operandFns[i](d) || 0;
+        for (let operandFn of operandFns) {
+          res *= operandFn(d) || 0;
         }
         return res;
       }
