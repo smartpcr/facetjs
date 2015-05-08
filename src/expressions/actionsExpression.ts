@@ -33,14 +33,7 @@ module Facet {
     }
 
     public equals(other: ActionsExpression): boolean {
-      if (!super.equals(other)) return false;
-      var thisActions = this.actions;
-      var otherActions = other.actions;
-      if (thisActions.length !== otherActions.length) return false;
-      for (var i = 0; i < thisActions.length; i++) {
-        if (!thisActions[i].equals(otherActions[i])) return false;
-      }
-      return true;
+      return super.equals(other) && higherArraysEqual(this.actions, other.actions);
     }
 
     public expressionCount(): int {
@@ -213,7 +206,7 @@ module Facet {
     public _computeResolved(): Q.Promise<NativeDataset> {
       var actions = this.actions;
 
-      function execAction(i: number) {
+      function execAction(i: int) {
         return (dataset: NativeDataset): NativeDataset | Q.Promise<NativeDataset> => {
           var action = actions[i];
           var actionExpression = action.expression;

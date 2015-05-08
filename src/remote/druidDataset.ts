@@ -32,10 +32,9 @@ module Facet {
     if (String(exprStr) === 'null') return null;
     var parts = exprStr.split(/(?=[*+])/);
     var acc = parseInt(parts.shift(), 10);
-    for (var i = 0; i < parts.length; i++) {
-      var p = parts[i];
-      var v = parseInt(p.substring(1), 10);
-      acc = p[0] === '*' ? acc * v : acc + v;
+    for (let part of parts) {
+      var v = parseInt(part.substring(1), 10);
+      acc = part[0] === '*' ? acc * v : acc + v;
     }
     return acc;
   }
@@ -98,10 +97,9 @@ module Facet {
 
       var result = res[0].result;
       var datum: Datum = {};
-      for (var i = 0; i < applies.length; i++) {
-        var apply = applies[i];
-        var name = apply.name;
-        var aggregate = (<AggregateExpression>apply.expression).fn;
+      for (let apply of applies) {
+        let name = apply.name;
+        let aggregate = (<AggregateExpression>apply.expression).fn;
         if (typeof result === 'string') {
           datum[name] = new Date(result);
         } else {
@@ -113,7 +111,7 @@ module Facet {
         }
       }
 
-      return new NativeDataset({source: 'native', data: [datum]});
+      return new NativeDataset({ source: 'native', data: [datum] });
     };
   }
 

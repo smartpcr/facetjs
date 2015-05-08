@@ -3,7 +3,7 @@ module Facet {
     export interface RetryRequesterParameters<T> {
       requester: Requester.FacetRequester<T>;
       delay?: number;
-      retry?: number;
+      retry?: int;
       retryOnTimeout?: boolean;
     }
 

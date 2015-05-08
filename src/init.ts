@@ -122,7 +122,21 @@ function multiMerge<T>(elements: T[], mergeFn: (a: T, b: T) => T): T[] {
 }
 
 function arraysEqual<T>(a: Array<T>, b: Array<T>): boolean {
-  return a.length === b.length && a.every((item, i) => (item === b[i]));
+  var length = a.length;
+  if (length !== b.length) return false;
+  for (var i = 0; i < length; i++) {
+    if (a[i] !== b[i]) return false;
+  }
+  return true;
+}
+
+function higherArraysEqual(a: Array<any>, b: Array<any>): boolean {
+  var length = a.length;
+  if (length !== b.length) return false;
+  for (var i = 0; i < length; i++) {
+    if (!a[i].equals(b[i])) return false;
+  }
+  return true;
 }
 
 var expressionParser: PEGParser;

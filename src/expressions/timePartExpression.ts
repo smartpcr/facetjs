@@ -65,7 +65,7 @@ module Facet {
       throw new Error("Vad, srsly make this work")
     }
 
-    public materializeWithinRange(extentRange: TimeRange, values: number[]): Set {
+    public materializeWithinRange(extentRange: TimeRange, values: int[]): Set {
       var partUnits = this.part.toLowerCase().split('_of_');
       var unitSmall = partUnits[0];
       var unitBig = partUnits[1];
@@ -79,8 +79,8 @@ module Facet {
       var ranges: TimeRange[] = [];
       var iter = bigTimeMover.floor(start, timezone);
       while (iter <= end) {
-        for (var i = 0; i < values.length; i++) {
-          var subIter = smallTimeMover.move(iter, timezone, values[i]);
+        for (let value of values) {
+          let subIter = smallTimeMover.move(iter, timezone, value);
           ranges.push(new TimeRange({
             start: subIter,
             end: smallTimeMover.move(subIter, timezone, 1)

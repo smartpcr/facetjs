@@ -62,8 +62,8 @@ module Facet {
     protected _getFnHelper(operandFns: ComputeFn[]): ComputeFn {
       return (d: Datum) => {
         var res = true;
-        for (var i = 0; i < operandFns.length; i++) {
-          res = res && operandFns[i](d);
+        for (let operandFn of operandFns) {
+          res = res && operandFn(d);
         }
         return res;
       }

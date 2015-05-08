@@ -270,7 +270,7 @@ module Facet {
     }
 
     // Aggregators
-    public count(): number {
+    public count(): int {
       return this.data.length;
     }
 

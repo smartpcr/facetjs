@@ -7,11 +7,6 @@ module Facet {
     return isInteger(n) && 0 < n;
   }
 
-  function repeatString(str: string, times: number): string {
-    if (times <= 0) return "";
-    return new Array(times + 1).join(str);
-  }
-
   export interface AttributeInfoJS {
     special?: string;
     type?: string;
@@ -22,8 +17,8 @@ module Facet {
     // range
     separator?: string;
     rangeSize?: number;
-    digitsBeforeDecimal?: number;
-    digitsAfterDecimal?: number;
+    digitsBeforeDecimal?: int;
+    digitsAfterDecimal?: int;
   }
 
   var check: ImmutableClass<AttributeInfoJS, AttributeInfoJS>;
@@ -141,8 +136,8 @@ module Facet {
 
     public separator: string;
     public rangeSize: number;
-    public digitsBeforeDecimal: number;
-    public digitsAfterDecimal: number;
+    public digitsBeforeDecimal: int;
+    public digitsAfterDecimal: int;
 
     constructor(parameters: AttributeInfoJS) {
       super(parameters);
@@ -223,12 +218,12 @@ module Facet {
       var before = valueStrSplit[0];
       var after = valueStrSplit[1];
       if (this.digitsBeforeDecimal) {
-        before = repeatString("0", this.digitsBeforeDecimal - before.length) + before;
+        before = repeat("0", this.digitsBeforeDecimal - before.length) + before;
       }
 
       if (this.digitsAfterDecimal) {
         after || (after = "");
-        after += repeatString("0", this.digitsAfterDecimal - after.length);
+        after += repeat("0", this.digitsAfterDecimal - after.length);
       }
 
       valueStr = before;

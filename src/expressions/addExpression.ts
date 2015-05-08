@@ -18,8 +18,8 @@ module Facet {
     protected _getFnHelper(operandFns: ComputeFn[]): ComputeFn {
       return (d: Datum) => {
         var res = 0;
-        for (var i = 0; i < operandFns.length; i++) {
-          res += operandFns[i](d) || 0;
+        for (let operandFn of operandFns) {
+          res += operandFn(d) || 0;
         }
         return res;
       }

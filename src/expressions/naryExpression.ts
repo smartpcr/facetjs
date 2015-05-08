@@ -32,13 +32,7 @@ module Facet {
     }
 
     public equals(other: NaryExpression): boolean {
-      if (!(super.equals(other) && this.operands.length === other.operands.length)) return false;
-      var thisOperands = this.operands;
-      var otherOperands = other.operands;
-      for (var i = 0; i < thisOperands.length; i++) {
-        if (!thisOperands[i].equals(otherOperands[i])) return false;
-      }
-      return true;
+      return super.equals(other) && higherArraysEqual(this.operands, other.operands);
     }
 
     public expressionCount(): int {
@@ -65,8 +59,8 @@ module Facet {
       var zeroValue = this._getZeroValue();
 
       var simpleOperands: Expression[] = [];
-      for (var i = 0; i < operands.length; i++) {
-        var simpleOperand = operands[i].simplify();
+      for (let operand of operands) {
+        let simpleOperand = operand.simplify();
 
         if (simpleOperand instanceof LiteralExpression) {
           if (unitValue !== null && simpleOperand.value === unitValue) continue;

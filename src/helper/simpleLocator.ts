@@ -4,7 +4,7 @@ module Facet {
 
     export interface SimpleLocatorParameters {
       resource: string;
-      defaultPort?: number;
+      defaultPort?: int;
     }
 
     export function simpleLocator(parameters: string): Locator.FacetLocator;
