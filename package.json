@@ -33,7 +33,6 @@
   "dependencies": {
     "express": "4.11.1",
     "higher-object": "^0.2.6",
-    "node-zookeeper-client": "~0.2.2",
     "q": "^1.1.2"
   },
   "peerDependencies": {
