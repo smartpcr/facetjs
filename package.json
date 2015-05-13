@@ -31,14 +31,13 @@
     "prepublish": "./prepublish"
   },
   "dependencies": {
-    "backoff": "~2.4.1",
     "express": "4.11.1",
     "higher-object": "^0.2.6",
     "node-zookeeper-client": "~0.2.2",
     "q": "^1.1.2"
   },
   "peerDependencies": {
-    "chronology": "0.7.x"
+    "chronology": "0.8.x"
   },
   "devDependencies": {
     "browserify": "~8.1.1",
