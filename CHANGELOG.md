@@ -1,5 +1,9 @@
 # Change Log
 
+## 0.15.6
+
+* added attributeOverrides to remote dataset to allow the user to force certain attributes
+
 ## 0.15.5
 
 * updated chronology
