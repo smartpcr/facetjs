@@ -1,9 +1,8 @@
 module Facet {
-  export type Attributes = Lookup<AttributeInfo>;
-
   export interface DatasetValue {
     source: string;
     attributes?: Attributes;
+    attributeOverrides?: Attributes;
     key?: string;
 
     // Native
@@ -25,14 +24,15 @@ module Facet {
 
   export interface DatasetJS {
     source: string;
-    attributes?: Lookup<AttributeInfoJS>;
+    attributes?: AttributeJSs;
+    attributeOverrides?: AttributeJSs;
     key?: string;
 
     // Native
     data?: Datum[];
 
     // Remote
-    rawAttributes?: Lookup<AttributeInfoJS>;
+    rawAttributes?: AttributeJSs;
     requester?: Requester.FacetRequester<any>;
     filter?: ExpressionJS;
   }
@@ -60,18 +60,10 @@ module Facet {
       var value: DatasetValue = {
         source: parameters.source
       };
-      var attributes = parameters.attributes;
-      if (attributes) {
-        if (typeof attributes !== 'object') {
-          throw new TypeError("invalid attributes");
-        } else {
-          var newAttributes: Lookup<AttributeInfo> = Object.create(null);
-          for (var k in attributes) {
-            if (!hasOwnProperty(attributes, k)) continue;
-            newAttributes[k] = AttributeInfo.fromJS(attributes[k]);
-          }
-          value.attributes = newAttributes;
-        }
+      if (hasOwnProperty(parameters, 'attributes')) {
+        value.attributes = AttributeInfo.fromJSs(parameters.attributes);
+      } else if (hasOwnProperty(parameters, 'attributeOverrides')) {
+        value.attributeOverrides = AttributeInfo.fromJSs(parameters.attributeOverrides);
       }
 
       return value;
@@ -116,6 +108,7 @@ module Facet {
 
     public source: string;
     public attributes: Attributes = null;
+    public attributeOverrides: Attributes = null;
     public key: string = null;
 
     constructor(parameters: DatasetValue, dummy: Dummy = null) {
@@ -125,6 +118,9 @@ module Facet {
       }
       if (parameters.attributes) {
         this.attributes = parameters.attributes;
+      }
+      if (parameters.attributeOverrides) {
+        this.attributeOverrides = parameters.attributeOverrides;
       }
       if (parameters.key) {
         this.key = parameters.key;
@@ -146,6 +142,7 @@ module Facet {
         source: this.source
       };
       if (this.attributes) value.attributes = this.attributes;
+      if (this.attributeOverrides) value.attributeOverrides = this.attributeOverrides;
       if (this.key) value.key = this.key;
       return value;
     }
@@ -154,18 +151,10 @@ module Facet {
       var js: DatasetJS = {
         source: this.source
       };
-      if (this.attributes) js.attributes = this.getAttributesJS();
+      if (this.attributes) js.attributes = AttributeInfo.toJSs(this.attributes);
+      if (this.attributeOverrides) js.attributeOverrides = AttributeInfo.toJSs(this.attributeOverrides);
       if (this.key) js.key = this.key;
       return js;
-    }
-
-    public getAttributesJS(): Lookup<AttributeInfoJS> {
-      var attributesJS: Lookup<AttributeInfoJS> = {};
-      var attributes = this.attributes;
-      for (var k in attributes) {
-        attributesJS[k] = attributes[k].toJS();
-      }
-      return attributesJS;
     }
 
     public toString(): string {

@@ -9,7 +9,7 @@ module Facet {
   }
 
   export interface IntrospectPostProcess {
-    (result: any): Lookup<AttributeInfo>;
+    (result: any): Attributes;
   }
 
   export interface IntrospectQueryAndPostProcess<T> {
@@ -144,7 +144,7 @@ module Facet {
 
     public toJS(): DatasetJS {
       var js = super.toJS();
-      if (this.rawAttributes) js.rawAttributes = this.getRawAttributesJS();
+      if (this.rawAttributes) js.rawAttributes = AttributeInfo.toJSs(this.rawAttributes);
       if (this.requester) {
         js.requester = this.requester;
       }
@@ -152,15 +152,6 @@ module Facet {
         js.filter = this.filter.toJS();
       }
       return js;
-    }
-
-    public getRawAttributesJS(): Lookup<AttributeInfoJS> {
-      var rawAttributesJS: Lookup<AttributeInfoJS> = {};
-      var rawAttributes = this.rawAttributes;
-      for (var k in rawAttributes) {
-        rawAttributesJS[k] = rawAttributes[k].toJS();
-      }
-      return rawAttributesJS;
     }
 
     public toString(): string {
@@ -595,8 +586,15 @@ module Facet {
       var ClassFn = Dataset.classMap[this.source];
       return this.requester({ query: queryAndPostProcess.query })
         .then(queryAndPostProcess.postProcess)
-        .then((attributes: Lookup<AttributeInfo>) => {
-          value.attributes = attributes;
+        .then((attributes: Attributes) => {
+          var attributeOverrides = value.attributeOverrides;
+          if (attributeOverrides) {
+            for (var k in attributeOverrides) {
+              attributes[k] = attributeOverrides[k];
+            }
+          }
+
+          value.attributes = attributes; // Once attributes are set attributeOverrides will be ignored
           return <RemoteDataset>(new ClassFn(value));
         })
     }

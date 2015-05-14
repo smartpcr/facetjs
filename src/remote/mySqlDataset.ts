@@ -40,8 +40,8 @@ module Facet {
     }
   }
 
-  function postProcessIntrospect(columns: SQLDescribeRow[]): Lookup<AttributeInfo> {
-    var attributes: Lookup<AttributeInfo> = Object.create(null);
+  function postProcessIntrospect(columns: SQLDescribeRow[]): Attributes {
+    var attributes: Attributes = Object.create(null);
     columns.forEach((column: SQLDescribeRow) => {
       var sqlType = column.Type;
       if (sqlType === "datetime") {
