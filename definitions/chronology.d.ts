@@ -1,10 +1,10 @@
 /// <reference path="../definitions/higher-object.d.ts" />
 declare module Chronology {
     interface WallTime {
+        rules: any;
         UTCToWallTime(date: Date, timezone: string): Date;
         WallTimeToUTC(timezone: string, years: number, months: number, days: number, hours: number, minutes: number, seconds: number, milliseconds: number): Date;
         init(a: any, b: any): void;
-        rules: any;
     }
     interface Parser {
         parse: (str: string) => any;
@@ -29,8 +29,8 @@ declare module Chronology {
 }
 declare module Chronology {
     class Timezone implements ImmutableInstance<string, string> {
+        static UTC: Timezone;
         private timezone;
-        static UTC(): Timezone;
         static isTimezone(candidate: any): boolean;
         static fromJS(spec: string): Timezone;
         /**
@@ -42,14 +42,21 @@ declare module Chronology {
         toJSON(): string;
         toString(): string;
         equals(other: Timezone): boolean;
+        isUTC(): boolean;
     }
 }
 declare module Chronology {
+    interface AlignFn {
+        (dt: Date, tz: Timezone): Date;
+    }
+    interface MoveFn {
+        (dt: Date, tz: Timezone, step: number): Date;
+    }
     interface TimeMover {
         canonicalLength: number;
-        floor: (dt: Date, tz: Timezone) => Date;
-        ceil: (dt: Date, tz: Timezone) => Date;
-        move: (dt: Date, tz: Timezone, step: number) => Date;
+        floor: AlignFn;
+        move: MoveFn;
+        ceil: AlignFn;
     }
     var second: TimeMover;
     var minute: TimeMover;
@@ -67,8 +74,7 @@ declare module Chronology {
         private _action;
         private _param;
         private _duration;
-        static fromJS(dateJS: Date): DateExpression;
-        static fromJS(dateJS: string): DateExpression;
+        static fromJS(dateJS: string | Date): DateExpression;
         static isDateExpression(candidate: any): boolean;
         constructor(dateJS: any);
         valueOf(): any;
@@ -170,15 +176,16 @@ declare module Chronology {
      * Interface that describes the spec a TimeRange all 'dates' are returned as ISO strings
      */
     interface TimeRangeJS {
-        start?: any;
+        start?: string | Date;
         duration?: string;
-        end?: any;
+        end?: string | Date;
     }
     class TimeRange implements ImmutableInstance<TimeRangeValue, TimeRangeJS> {
         start: DateExpression;
         end: DateExpression;
         duration: Duration;
         static fromJS(spec: TimeRangeJS): TimeRange;
+        static fromString(str: string): TimeRange;
         static isTimeRange(candidate: any): boolean;
         constructor(parameters: TimeRangeValue);
         valueOf(): TimeRangeValue;
