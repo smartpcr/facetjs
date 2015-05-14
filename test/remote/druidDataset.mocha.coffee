@@ -212,6 +212,19 @@ describe "DruidDataset", ->
         "queryType": "timeseries"
       })
 
+    it "inlines a total with a def", ->
+      ex = $()
+        .def('TotalPrice', '$diamonds.sum($price)')
+        .apply('TotalPriceX2', '$TotalPrice * 2')
+
+      ex = ex.referenceCheck(context).resolve(context).simplify()
+
+      expect(ex.op).to.equal('literal')
+      remoteDataset = ex.value
+      expect(remoteDataset.getQueryAndPostProcess().query).to.deep.equal({
+
+      })
+
     it "a split", ->
       ex = $('wiki').split("$page", 'Page')
         .apply('Count', '$wiki.count()')

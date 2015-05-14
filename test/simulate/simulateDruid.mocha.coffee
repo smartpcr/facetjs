@@ -875,6 +875,15 @@ describe "simulate Druid", ->
       }
     ])
 
+  it "inlines a def", ->
+    ex = $('diamonds').split("$cut", 'Cut')
+      .def('TotalPrice', '$diamonds.sum($price)')
+      .apply('TotalPriceX2', '$TotalPrice * 2')
+
+    expect(ex.simulateQueryPlan(context)).to.deep.equal([
+
+    ])
+
   it "makes a query on a dataset with a fancy name", ->
     ex = $()
       .apply('maximumTime', '${diamonds-alt:;<>}.max($time)')
