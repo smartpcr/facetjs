@@ -7,6 +7,9 @@ module Facet {
     return isInteger(n) && 0 < n;
   }
 
+  export type Attributes = Lookup<AttributeInfo>;
+  export type AttributeJSs = Lookup<AttributeInfoJS>;
+
   export interface AttributeInfoJS {
     special?: string;
     type?: string;
@@ -48,6 +51,27 @@ module Facet {
         throw new Error("unsupported special attributeInfo '" + parameters.special + "'");
       }
       return Class.fromJS(parameters);
+    }
+
+    static fromJSs(attributeJSs: AttributeJSs): Attributes {
+      if (typeof attributeJSs !== 'object') {
+        throw new TypeError("invalid attributeJSs");
+      } else {
+        var attributes: Attributes = Object.create(null);
+        for (let k in attributeJSs) {
+          if (!hasOwnProperty(attributeJSs, k)) continue;
+          attributes[k] = AttributeInfo.fromJS(attributeJSs[k]);
+        }
+        return attributes;
+      }
+    }
+
+    static toJSs(attributes: Attributes): AttributeJSs {
+      var attributesJS: AttributeJSs = {};
+      for (let k in attributes) {
+        attributesJS[k] = attributes[k].toJS();
+      }
+      return attributesJS;
     }
 
     public special: string;
@@ -255,13 +279,14 @@ module Facet {
     constructor(parameters = {}) {
       super(parameters);
       this._ensureSpecial("unique");
-      this._ensureType('NUMBER');
+      this._ensureType('STRING');
     }
 
     public serialize(value: any): string {
       throw new Error("can not serialize an approximate unique value");
     }
   }
+  AttributeInfo.register(UniqueAttributeInfo);
 
   export class HistogramAttributeInfo extends AttributeInfo {
     static fromJS(parameters: AttributeInfoJS): HistogramAttributeInfo {
@@ -278,7 +303,7 @@ module Facet {
       throw new Error("can not serialize a histogram value");
     }
   }
-  AttributeInfo.register(UniqueAttributeInfo);
+  AttributeInfo.register(HistogramAttributeInfo);
 
   AttributeInfo.UNIQUE = new UniqueAttributeInfo();
   AttributeInfo.HISTOGRAM = new HistogramAttributeInfo();

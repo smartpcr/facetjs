@@ -52,7 +52,7 @@ describe "RemoteDataset", ->
       expect(remoteDataset.derivedAttributes).to.have.all.keys(['addedTwice']);
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Count: { "type": "NUMBER" },
         TotalAdded: { "type": "NUMBER" }
       })
@@ -78,7 +78,7 @@ describe "RemoteDataset", ->
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
       expect(remoteDataset.limit.limit).to.equal(5)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Page: { "type": "STRING" },
         Count: { "type": "NUMBER" },
         Added: { "type": "NUMBER" }
@@ -105,7 +105,7 @@ describe "RemoteDataset", ->
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
       expect(remoteDataset.limit.limit).to.equal(5)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Page: { "type": "STRING" },
         Count: { "type": "NUMBER" },
         Added: { "type": "NUMBER" }
@@ -126,7 +126,7 @@ describe "RemoteDataset", ->
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
       expect(remoteDataset.limit.limit).to.equal(5)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Page: { "type": "STRING" },
         Count: { "type": "NUMBER" },
         Added: { "type": "NUMBER" }
@@ -146,7 +146,7 @@ describe "RemoteDataset", ->
       remoteDataset = ex.operand.value
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Timestamp: { "type": "TIME_RANGE" },
         Count: { "type": "NUMBER" },
         Added: { "type": "NUMBER" }
@@ -179,7 +179,7 @@ describe "RemoteDataset", ->
       expect(remoteDataset.filter.toString()).to.equal('($language:STRING = "en" and $time in [2013-02-26T00:00:00.000Z,2013-02-27T00:00:00.000Z))')
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Page: { "type": "STRING" },
         Count: { "type": "NUMBER" },
         Added: { "type": "NUMBER" }
@@ -216,7 +216,7 @@ describe "RemoteDataset", ->
       remoteDataset = ex.operand.value
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Count: { "type": "NUMBER" },
         TotalAdded: { "type": "NUMBER" }
       })
@@ -246,7 +246,7 @@ describe "RemoteDataset", ->
       remoteDataset = ex.operand.value
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Count: { "type": "NUMBER" },
         TotalAdded: { "type": "NUMBER" }
       })
@@ -273,7 +273,7 @@ describe "RemoteDataset", ->
       expect(remoteDataset.defs).to.have.length(0)
       expect(remoteDataset.applies).to.have.length(2)
       expect(remoteDataset.limit.limit).to.equal(5)
-      expect(remoteDataset.getAttributesJS()).to.deep.equal({
+      expect(remoteDataset.toJS().attributes).to.deep.equal({
         Page: { "type": "STRING" },
         Count: { "type": "NUMBER" },
         Added: { "type": "NUMBER" }
@@ -298,7 +298,7 @@ describe "RemoteDataset", ->
       remoteDatasetMain = ex.operand.lhs.value
       expect(remoteDatasetMain.defs).to.have.length(0)
       expect(remoteDatasetMain.applies).to.have.length(2)
-      expect(remoteDatasetMain.getAttributesJS()).to.deep.equal({
+      expect(remoteDatasetMain.toJS().attributes).to.deep.equal({
         Count: { "type": "NUMBER" }
         Page: { "type": "STRING" }
         _br_0: { "type": "NUMBER" }
@@ -307,7 +307,7 @@ describe "RemoteDataset", ->
       remoteDatasetCmp = ex.operand.rhs.value
       expect(remoteDatasetCmp.defs).to.have.length(1)
       expect(remoteDatasetCmp.applies).to.have.length(1)
-      expect(remoteDatasetCmp.getAttributesJS()).to.deep.equal({
+      expect(remoteDatasetCmp.toJS().attributes).to.deep.equal({
         Page: { "type": "STRING" }
         _br_1: { "type": "NUMBER" }
       })

@@ -327,7 +327,7 @@ module Facet {
       }
       var datum = data[0];
 
-      var attributes: Lookup<AttributeInfo> = {};
+      var attributes: Attributes = {};
       Object.keys(datum).forEach(applyName => {
         var applyValue = datum[applyName];
         if (applyName !== '$def') {
@@ -339,6 +339,16 @@ module Facet {
           })
         }
       });
+
+      var attributeOverrides = this.attributeOverrides;
+      if (attributeOverrides) {
+        for (var k in attributeOverrides) {
+          attributes[k] = attributeOverrides[k];
+        }
+        this.attributeOverrides = null;
+      }
+
+      // ToDo: make this immutable so it matches the rest of the code
       this.attributes = attributes;
     }
 

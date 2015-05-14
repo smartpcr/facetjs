@@ -236,8 +236,8 @@ module Facet {
   }
 
   function postProcessIntrospectFactory(timeAttribute: string): IntrospectPostProcess {
-    return (res: Druid.DatasourceIntrospectResult): Lookup<AttributeInfo> => {
-      var attributes: Lookup<AttributeInfo> = Object.create(null);
+    return (res: Druid.DatasourceIntrospectResult): Attributes => {
+      var attributes: Attributes = Object.create(null);
       attributes[timeAttribute] = new AttributeInfo({ type: 'TIME' });
       res.dimensions.forEach(dimension => {
         attributes[dimension] = new AttributeInfo({ type: 'STRING' });

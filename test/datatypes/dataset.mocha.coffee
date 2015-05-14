@@ -113,6 +113,18 @@ describe "Dataset", ->
         exactResultsOnly: true,
         context: null
       }
+
+      {
+        source: 'druid',
+        dataSource: 'moon_child2', # ToDo: remove the 2 and fix the equality test
+        timeAttribute: 'time',
+        context: null
+        attributeOverrides: {
+          color: { type: 'STRING' }
+          cut: { type: 'STRING' }
+          unique: { type: "STRING", special: 'unique' }
+        }
+      }
     ], {
       newThrows: true
     })

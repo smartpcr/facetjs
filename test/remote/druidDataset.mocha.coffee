@@ -1,4 +1,5 @@
 { expect } = require("chai")
+Q = require('q')
 
 { WallTime } = require('chronology')
 if not WallTime.rules
@@ -7,6 +8,11 @@ if not WallTime.rules
 
 facet = require('../../build/facet')
 { Expression, Dataset, TimeRange, $ } = facet
+
+timeFilter = $('time').in(TimeRange.fromJS({
+  start: new Date("2013-02-26T00:00:00Z")
+  end: new Date("2013-02-27T00:00:00Z")
+}))
 
 context = {
   wiki: Dataset.fromJS({
@@ -20,10 +26,7 @@ context = {
       added: { type: 'NUMBER' }
       deleted: { type: 'NUMBER' }
     }
-    filter: $('time').in(TimeRange.fromJS({
-      start: new Date("2013-02-26T00:00:00Z")
-      end: new Date("2013-02-27T00:00:00Z")
-    }))
+    filter: timeFilter
   })
 }
 
@@ -39,17 +42,12 @@ contextNoApprox = {
       page: { type: 'STRING' }
       added: { type: 'NUMBER' }
     }
-    filter: $('time').in(TimeRange.fromJS({
-      start: new Date("2013-02-26T00:00:00Z")
-      end: new Date("2013-02-27T00:00:00Z")
-    }))
+    filter: timeFilter
   })
 }
 
 describe "DruidDataset", ->
   describe "processApply", ->
-    wikiDataset = context.wiki
-
     it "breaks up correctly in simple case", ->
       ex = $()
         .def('wiki', '$wiki') # for now
@@ -336,3 +334,99 @@ describe "DruidDataset", ->
         ]
         "queryType": "timeseries"
       })
+
+  describe "introspects", ->
+    requester = ({query}) ->
+      expect(query).to.deep.equal({
+        "dataSource": "wikipedia_editstream"
+        "queryType": "introspect"
+      })
+      return Q({
+        dimensions: ['page', 'language']
+        metrics: ['added', 'deleted', 'uniques']
+      })
+
+    it "does a simple introspect", (testComplete) ->
+      wikiDataset = Dataset.fromJS({
+        source: 'druid',
+        dataSource: 'wikipedia_editstream',
+        timeAttribute: 'time',
+        requester
+        filter: timeFilter
+      })
+
+      wikiDataset.introspect().then((introspectedDataset) ->
+        expect(introspectedDataset.toJS().attributes).to.deep.equal({
+          "added": {
+            "filterable": false
+            "splitable": false
+            "type": "NUMBER"
+          }
+          "deleted": {
+            "filterable": false
+            "splitable": false
+            "type": "NUMBER"
+          }
+          "language": {
+            "type": "STRING"
+          }
+          "page": {
+            "type": "STRING"
+          }
+          "time": {
+            "type": "TIME"
+          }
+          "uniques": {
+            "filterable": false
+            "splitable": false
+            "type": "NUMBER"
+          }
+        })
+        testComplete()
+      ).done()
+
+    it "does an introspect with overrides", (testComplete) ->
+      wikiDataset = Dataset.fromJS({
+        source: 'druid',
+        dataSource: 'wikipedia_editstream',
+        timeAttribute: 'time',
+        requester
+        filter: timeFilter
+        attributeOverrides: {
+          uniques: { special: 'unique' }
+          histo: { special: 'histogram' }
+        }
+      })
+
+      wikiDataset.introspect().then((introspectedDataset) ->
+        expect(introspectedDataset.toJS().attributes).to.deep.equal({
+          "added": {
+            "filterable": false
+            "splitable": false
+            "type": "NUMBER"
+          }
+          "deleted": {
+            "filterable": false
+            "splitable": false
+            "type": "NUMBER"
+          }
+          "histo": {
+            "special": "histogram"
+            "type": "NUMBER"
+          }
+          "language": {
+            "type": "STRING"
+          }
+          "page": {
+            "type": "STRING"
+          }
+          "time": {
+            "type": "TIME"
+          }
+          "uniques": {
+            "special": "unique"
+            "type": "STRING"
+          }
+        })
+        testComplete()
+      ).done()
