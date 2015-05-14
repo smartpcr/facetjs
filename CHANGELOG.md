@@ -1,5 +1,10 @@
 # Change Log
 
+## 0.15.5
+
+* updated chronology
+* removed a number of unused dependencies
+
 ## 0.15.4
 
 * changed internal facetjs code to use more ES6 features following the beta release of TypeScript 1.5
