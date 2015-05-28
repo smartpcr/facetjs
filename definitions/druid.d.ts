@@ -63,6 +63,9 @@ declare module Druid {
 
         // Specific to type: "and" | "or"
         fields?: Filter[];
+
+        // Specific to type: "extraction"
+        extractionFn?: ExtractionFn;
     }
 
     // http://druid.io/docs/0.7.0/Aggregations.html
