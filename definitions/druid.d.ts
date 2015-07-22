@@ -12,7 +12,7 @@ declare module Druid {
     interface Context {
         timeout?: number;
         priority?: number;
-        queryId?: number;
+        queryId?: number|string;
         useCache?: boolean;
         populateCache?: boolean;
         bySegment?: boolean;
@@ -241,7 +241,7 @@ declare module Druid {
     // http://druid.io/docs/0.7.0/Querying.html
     interface Query {
         queryType: string;
-        dataSource: string|DataSource;
+        dataSource?: string|DataSource;
         context?: Context;
         intervals?: Intervals;
         filter?: Filter;
