@@ -175,6 +175,13 @@ declare module Druid {
         columns?: string[];
     }
 
+    interface ExtractionSpec {
+        // base dimension to which extractionFn applies
+        attribute: string;
+
+        extractionFn: ExtractionFn;
+    }
+
     // http://druid.io/docs/0.7.0/DimensionSpecs.html
     interface ExtractionFn {
         type: string;
